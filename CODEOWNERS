@@ -157,6 +157,7 @@
 /bundles/org.openhab.binding.urtsi/ @OLibutzki
 /bundles/org.openhab.binding.valloxmv/ @bjoernbrings
 /bundles/org.openhab.binding.velbus/ @cedricboon
+/bundles/org.openhab.binding.verisure/ @jannegpriv
 /bundles/org.openhab.binding.vitotronic/ @steand
 /bundles/org.openhab.binding.weatherunderground/ @lolodomo
 /bundles/org.openhab.binding.wemo/ @hmerk
