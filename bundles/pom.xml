@@ -168,6 +168,7 @@
     <module>org.openhab.binding.urtsi</module>
     <module>org.openhab.binding.valloxmv</module>
     <module>org.openhab.binding.velbus</module>
+    <module>org.openhab.binding.verisure</module>
     <module>org.openhab.binding.vitotronic</module>
     <module>org.openhab.binding.weatherunderground</module>
     <module>org.openhab.binding.wemo</module>
