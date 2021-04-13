@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="sltrafficinformation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="deviations">
+		<label>SL Traffic Information Deviations</label>
+		<description>SL traffic information deviations for configured line numbers.</description>
+
+		<channels>
+			<channel id="deviations" typeId="deviations"/>
+		</channels>
+
+		<config-description-ref uri="thing-type:sltrafficinformation:deviations"/>
+
+	</thing-type>
+
+	<thing-type id="realTimeInformation">
+		<label>SL Real time Traffic Information</label>
+		<description>SL real time traffic information for configured line numbers.</description>
+
+		<channels>
+			<channel id="realTimeInformation" typeId="realTimeInformation"/>
+			<channel id="nextDeparture" typeId="nextDeparture"/>
+			<channel id="secondDeparture" typeId="secondDeparture"/>
+			<channel id="thirdDeparture" typeId="thirdDeparture"/>
+			<channel id="nextDepartureDeviations" typeId="nextDepartureDeviations"/>
+			<channel id="secondDepartureDeviations" typeId="secondDepartureDeviations"/>
+			<channel id="thirdDepartureDeviations" typeId="thirdDepartureDeviations"/>
+		</channels>
+
+		<config-description-ref uri="thing-type:sltrafficinformation:realTimeInfo"/>
+
+	</thing-type>
+
+	<channel-type id="deviations">
+		<item-type>String</item-type>
+		<label>Current Deviations</label>
+		<description>Information on current deviations for configured line numbers.</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+	<channel-type id="realTimeInformation">
+		<item-type>String</item-type>
+		<label>Current Real Time Information</label>
+		<description>Current real time information for configured site ID and direction or end destination(s).</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+	<channel-type id="nextDeparture">
+		<item-type>Number:Time</item-type>
+		<label>Next Departure</label>
+		<description>Next departure for configured site ID and direction or end destination(s).</description>
+		<state readOnly="true" pattern="%d min"/>
+	</channel-type>
+
+	<channel-type id="secondDeparture">
+		<item-type>Number:Time</item-type>
+		<label>Second Departure</label>
+		<description>Second departure for configured site ID and direction or end destination(s).</description>
+		<state readOnly="true" pattern="%d min"/>
+	</channel-type>
+
+	<channel-type id="thirdDeparture">
+		<item-type>Number:Time</item-type>
+		<label>Third Departure</label>
+		<description>Third departure for configured site ID and direction or end destination(s).</description>
+		<state readOnly="true" pattern="%d min"/>
+	</channel-type>
+
+	<channel-type id="nextDepartureDeviations">
+		<item-type>String</item-type>
+		<label>Next Departure Deviations</label>
+		<description>Information on current deviations for next departure</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+	<channel-type id="secondDepartureDeviations">
+		<item-type>String</item-type>
+		<label>Second Departure Deviations</label>
+		<description>Information on current deviations for second departure</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+	<channel-type id="thirdDepartureDeviations">
+		<item-type>String</item-type>
+		<label>Third Departure Deviations</label>
+		<description>Information on current deviations for third departure</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+</thing:thing-descriptions>

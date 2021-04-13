@@ -276,6 +276,7 @@
     <module>org.openhab.binding.siemensrds</module>
     <module>org.openhab.binding.sinope</module>
     <module>org.openhab.binding.sleepiq</module>
+    <module>org.openhab.binding.sltrafficinformation</module>
     <module>org.openhab.binding.smaenergymeter</module>
     <module>org.openhab.binding.smartmeter</module>
     <module>org.openhab.binding.smhi</module>
@@ -290,6 +291,7 @@
     <module>org.openhab.binding.sonyprojector</module>
     <module>org.openhab.binding.spotify</module>
     <module>org.openhab.binding.squeezebox</module>
+    <module>org.openhab.binding.srvrecycling</module>
     <module>org.openhab.binding.surepetcare</module>
     <module>org.openhab.binding.synopanalyzer</module>
     <module>org.openhab.binding.systeminfo</module>

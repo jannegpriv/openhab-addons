@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="srvrecycling"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Sample Thing Type -->
+	<thing-type id="pickups">
+		<label>SRV Recycling Pickups</label>
+		<description>SRV recycling pickups for configured address.</description>
+
+		<channels>
+			<channel id="channel1" typeId="sample-channel"/>
+		</channels>
+
+		<config-description>
+			<parameter name="address" type="text" required="true">
+				<label>Home Address</label>
+				<description>This is your home address.</description>
+			</parameter>
+		</config-description>
+
+	</thing-type>
+
+	<!-- Sample Channel Type -->
+	<channel-type id="sample-channel">
+		<item-type>srvrecyclingItem</item-type>
+		<label>SrvRecycling Binding Channel</label>
+		<description>Sample channel for SrvRecycling Binding</description>
+	</channel-type>
+
+</thing:thing-descriptions>

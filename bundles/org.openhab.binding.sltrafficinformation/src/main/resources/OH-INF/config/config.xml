@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:sltrafficinformation:deviations">
+		<parameter name="apiKeyDeviation" type="text" required="true">
+			<label>Your SL Deviation API Key</label>
+			<description>Your own SL API key for Deviation API.</description>
+		</parameter>
+
+		<parameter name="lineNumbers" type="text" required="true">
+			<label>Line Numbers Of Interest</label>
+			<description>Line numbers of interest (comma separated list).</description>
+		</parameter>
+
+		<parameter name="refresh" type="integer">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval in minutes.</description>
+			<default>10</default>
+		</parameter>
+
+	</config-description>
+
+	<config-description uri="thing-type:sltrafficinformation:realTimeInfo">
+		<parameter name="apiKeyRealTime" type="text" required="true">
+			<label>Your SL Real Time Information API Key</label>
+			<description>Your own SL real time information API key.</description>
+		</parameter>
+
+		<parameter name="siteId" type="text" required="true">
+			<label>SL Site ID</label>
+			<description>SL site ID of interest.</description>
+		</parameter>
+
+		<parameter name="timeWindow" type="integer" required="true">
+			<label>Time Window</label>
+			<description>Time window in minutes (0-60).</description>
+		</parameter>
+
+		<parameter name="journeyDirection" type="text" required="false">
+			<label>Journey Direction</label>
+			<description>Desired direction (1 or 2).</description>
+		</parameter>
+
+		<parameter name="destinations" type="text" required="false">
+			<label>End Destinations</label>
+			<description>End destination(s) of interest (comma separated list).</description>
+		</parameter>
+
+		<parameter name="lineNumbers" type="text" required="false">
+			<label>Line Numbers</label>
+			<description>Line numbers of interest (comma separated list).</description>
+		</parameter>
+
+		<parameter name="offset" type="integer">
+			<label>Offset</label>
+			<description>Specifies the offset time in minutes that can be used to take account for walking time to station.</description>
+			<default>0</default>
+		</parameter>
+
+		<parameter name="refresh" type="integer">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval in minutes.</description>
+			<default>10</default>
+		</parameter>
+
+	</config-description>
+
+</config-description:config-descriptions>
