@@ -24,7 +24,6 @@ import org.openhab.binding.carnet.internal.api.CarNetApiBase;
 import org.openhab.binding.carnet.internal.api.CarNetApiGSonDTO.CNHeaterVentilation.CarNetHeaterVentilationStatus;
 import org.openhab.binding.carnet.internal.api.CarNetIChanneldMapper.ChannelIdMapEntry;
 import org.openhab.binding.carnet.internal.handler.CarNetVehicleHandler;
-import org.openhab.core.library.unit.SIUnits;
 
 /**
  * {@link CarNetRemoteServicePreHeat} implements the remote heater service
@@ -43,9 +42,7 @@ public class CarNetRemoteServicePreHeat extends CarNetRemoteBaseService {
         // rheating includes pre-heater and ventilation
         addChannel(channels, CHANNEL_GROUP_CONTROL, CHANNEL_CONTROL_PREHEAT, ITEMT_SWITCH, null, false, false);
         addChannel(channels, CHANNEL_GROUP_CONTROL, CHANNEL_CONTROL_VENT, ITEMT_SWITCH, null, false, false);
-        addChannel(channels, CHANNEL_GROUP_CONTROL, CHANNEL_CLIMATER_TARGET_TEMP, ITEMT_TEMP, SIUnits.CELSIUS, false,
-                false);
-        addChannel(channels, CHANNEL_GROUP_CONTROL, CHANNEL_CONTROL_DURATION, ITEMT_NUMBER, null, true, false);
+        addChannel(channels, CHANNEL_GROUP_CONTROL, CHANNEL_CONTROL_DURATION, ITEMT_NUMBER, null, false, false);
         return true;
     }
 

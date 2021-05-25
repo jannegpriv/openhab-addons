@@ -407,8 +407,8 @@ public abstract class CarNetApiBase implements CarNetBrandAuthenticator {
                     ? "{\"performAction\":{\"quickstart\":{\"startMode\":\"heating\",\"active\":true,\"climatisationDuration\":"
                             + duration + "}}}"
                     : "{\"performAction\":{\"quickstop\":{\"active\":false}}}";
-            return sendAction("bs/rs/v1/{0}/{1}/vehicles/{2}/action", CNAPI_SERVICE_REMOTE_HEATING, action, true,
-                    contentType, body);
+            return sendAction("bs/rs/v1/{0}/{1}/vehicles/{2}/climater/actions", CNAPI_SERVICE_REMOTE_HEATING, action,
+                    true, contentType, body);
         }
     }
 
@@ -456,6 +456,11 @@ public abstract class CarNetApiBase implements CarNetBrandAuthenticator {
     public CarNetClimaterStatus getClimaterStatus() throws CarNetException {
         return callApi("bs/climatisation/v1/{0}/{1}/vehicles/{2}/climater", "climaterStatus",
                 CNClimater.class).climater;
+    }
+
+    public CarNetHeaterVentilationStatus getHeaterVentilationStatus() throws CarNetException {
+        return callApi("bs/rs/v1/{0}/{1}/vehicles/{2}/status", "heaterVentilationStatus",
+                CNHeaterVentilation.class).statusResponse;
     }
 
     public String getClimaterTimer() throws CarNetException {
