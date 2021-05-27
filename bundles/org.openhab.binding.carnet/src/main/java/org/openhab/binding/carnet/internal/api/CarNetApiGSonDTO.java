@@ -145,7 +145,7 @@ public class CarNetApiGSonDTO {
     }
 
     public static class CNPairingInfo {
-        public static class CarNetPairingInfo {
+        public class CarNetPairingInfo {
             public String pairingStatus;
             public String xmlns;
             public String userId;
@@ -283,55 +283,15 @@ public class CarNetApiGSonDTO {
         public CNStoredVehicleDataResponse storedVehicleDataResponse;
     }
 
-    public static class CarNetPosition {
-        public CarNetCoordinate coordinate = new CarNetCoordinate();
-        public String parkingTimeUTC = "";
-        public String timestampCarSent = "";
-        public String timestampTssReceived = "";
-
-        public CarNetPosition(CNFindCarResponse position) {
-            if (position != null && position.findCarResponse != null) {
-                coordinate = position.findCarResponse.carPosition.carCoordinate;
-                timestampCarSent = position.findCarResponse.carPosition.timestampCarSent;
-                timestampTssReceived = position.findCarResponse.carPosition.timestampTssReceived;
-                parkingTimeUTC = position.findCarResponse.parkingTimeUTC;
-            }
-        }
-
-        public CarNetPosition(CNStoredPosition position) {
-            if (position != null && position.storedPositionResponse != null) {
-                coordinate = position.storedPositionResponse.position.carCoordinate;
-                parkingTimeUTC = position.storedPositionResponse.parkingTimeUTC;
-            }
-        }
-
-        public double getLattitude() {
-            return coordinate.latitude / 1000000.0;
-        }
-
-        public double getLongitude() {
-            return coordinate.longitude / 1000000.0;
-        }
-
-        public String getCarSentTime() {
-            return !timestampTssReceived.isEmpty() ? timestampTssReceived : timestampCarSent;
-        }
-
-        public String getParkingTime() {
-            return parkingTimeUTC;
-        }
-    }
-
-    public static class CarNetCoordinate {
-        public Integer latitude = 0;
-        public Integer longitude = 0;
-    }
-
-    public static class CNFindCarResponse {
-        public static class CarNetVehiclePosition {
+    public static class CarNetVehiclePosition {
+        public static class CNFindCarResponse {
             public static class CNPosition {
+                public static class CNCarCoordinates {
+                    public Integer latitude;
+                    public Integer longitude;
+                }
 
-                public CarNetCoordinate carCoordinate;
+                public CNCarCoordinates carCoordinate;
                 public String timestampCarSent;
                 public String timestampTssReceived;
             }
@@ -341,36 +301,22 @@ public class CarNetApiGSonDTO {
             public String parkingTimeUTC;
         }
 
-        private CarNetVehiclePosition findCarResponse;
+        private CNFindCarResponse findCarResponse;
 
-        public CarNetCoordinate getCoordinate() {
-            return findCarResponse.carPosition != null && findCarResponse.carPosition.carCoordinate != null
-                    ? findCarResponse.carPosition.carCoordinate
-                    : new CarNetCoordinate();
-        }
-    }
-
-    public static class CNStoredPosition {
-        public static class CarNetStoredPosition {
-            public static class CNPosition {
-                public static class CNPositionHeading {
-                    public Integer direction;
-                }
-
-                public CNPositionHeading heading;
-                public CarNetCoordinate carCoordinate;
-            }
-
-            public String parkingTimeUTC;
-            public CNPosition position;
+        public double getLattitude() {
+            return findCarResponse.carPosition.carCoordinate.latitude / 1000000.0;
         }
 
-        public CarNetStoredPosition storedPositionResponse;
+        public double getLongitude() {
+            return findCarResponse.carPosition.carCoordinate.longitude / 1000000.0;
+        }
 
-        public CarNetCoordinate getCoordinate() {
-            return storedPositionResponse.position != null && storedPositionResponse.position.carCoordinate != null
-                    ? storedPositionResponse.position.carCoordinate
-                    : new CarNetCoordinate();
+        public String getCarSentTime() {
+            return findCarResponse.carPosition.timestampTssReceived;
+        }
+
+        public String getParkingTime() {
+            return findCarResponse.parkingTimeUTC;
         }
     }
 
@@ -379,7 +325,7 @@ public class CarNetApiGSonDTO {
     }
 
     public static class CarNetActionResponse {
-        public static class CNActionResponse {
+        public class CNActionResponse {
             public class CNRluActionResponse {
                 public String requestId;
                 public String vin;
@@ -402,44 +348,31 @@ public class CarNetApiGSonDTO {
                 public String vin;
             }
 
+            public class CNRhonkFlashStatus {
+                public String statusCode;
+            }
+
+            public class CNRhonkFlashActionResponse {
+                public String id;
+                CNRhonkFlashStatus status;
+            }
+
             public class CarNetCurrentVehicleData {
                 public String requestId;
                 public String vin;
             }
 
             @SerializedName("CurrentVehicleDataResponse")
-            public CarNetCurrentVehicleData currentVehicleDataResponse;
-            public CNRluActionResponse rluActionResponse;
-            public CNRclimaActionResponse action;
-            public CNRheatActionResponse performActionResponse;
-            public CNHonkFlashResponse.CarNetHonkFlashResponse honkAndFlashRequest;
+            CarNetCurrentVehicleData currentVehicleDataResponse;
+
+            CNRluActionResponse rluActionResponse;
+            CNRclimaActionResponse action;
+            CNRheatActionResponse performActionResponse;
+            CNRhonkFlashActionResponse honkAndFlashRequest;
         }
 
         public String requestId;
         public String vin;
-    }
-
-    public static class CNHonkFlashResponse {
-        /*
-         * {"honkAndFlashRequest":{"lastUpdated":"2021-05-26T20:11:37Z","serviceDuration":15,"userPosition":{"latitude":
-         * 59222078,"longitude":18001326},"id":4937451,"serviceOperationCode":"FLASH_ONLY","status":{"statusCode":
-         * "REQUEST_IN_PROGRESS"}}}
-         */
-        public static class CarNetHonkFlashResponse {
-            public static class CNFonkFlashStatusCode {
-                // {'status': {'statusCode': 'REQUEST_IN_PROGRESS'}}
-                public String statusCode;
-            }
-
-            public String id;
-            public String lastUpdated;
-            public Integer serviceDuration;
-            public String serviceOperationCode;
-            public CarNetCoordinate userPosition;
-            public CNFonkFlashStatusCode status;
-        }
-
-        public CarNetHonkFlashResponse honkAndFlashRequest;
     }
 
     public static class CNEluActionHistory {
@@ -843,116 +776,6 @@ public class CarNetApiGSonDTO {
         CarNetClimaterStatus climater;
     }
 
-    public static class CNSpeedAlertConfig {
-        public static class CarNetSpeedAlertConfig {
-            /*
-             * "minimumSpeedLimit":"0",
-             * "debouncePostTime":"30",
-             * "maximumSpeedLimit":"161",
-             * "timeoutJobProcessing":"120",
-             * "persistenceTimeHistoryEntries":"60",
-             * "maximalNumberDefinitions":"10",
-             * "timeoutJobDelivery":"100",
-             * "fnsUserTypes":"PRIMARY_USER",
-             * "reviewLocation":false,
-             * "maximalNumberHistoryEntries":"100",
-             * "maximalNumberActiveDefinitions":"2",
-             * "debouncePreTime":"10"
-             */
-            public String minimumSpeedLimit;
-            public String debouncePostTime;
-            public String maximumSpeedLimit;
-            public String timeoutJobProcessing;
-            public String persistenceTimeHistoryEntries;
-            public String maximalNumberDefinitions;
-            public String timeoutJobDelivery;
-            public String fnsUserTypes;
-            public Boolean reviewLocation;
-            public String maximalNumberHistoryEntries;
-            public String maximalNumberActiveDefinitions;
-            public String debouncePreTime;
-        }
-
-        public CarNetSpeedAlertConfig speedAlertConfiguration;
-    }
-
-    public static class CNSpeedAlerts {
-        public static class CarNetSpeedAlerts {
-            public static class CarNetpeedAlertEntry {
-                /*
-                 * "id":"1548989",
-                 * "alertType":"START_EXCEEDING",
-                 * "definitionId":"135965",
-                 * "definitionName":"Benachrichtigung 50 km/h",
-                 * "occurenceDateTime":"2021-05-26T16:16:54Z",
-                 * "speedLimit":"50"
-                 *
-                 */
-                public String id;
-                public String alertType;
-                public String definitionName;
-                public String occurenceDateTime;
-                public String speedLimit;
-            }
-
-            public ArrayList<CarNetpeedAlertEntry> speedAlert = new ArrayList<>();
-        }
-
-        public CarNetSpeedAlerts speedAlerts;
-    }
-
-    public static class CNGeoFenceAlertConfig {
-        public class CarNetGeoFenceConfig {
-            /*
-             * "debouncePostTime":"10",
-             * "timeoutJobProcessing":"120",
-             * "persistenceTimeHistoryEntries":"60",
-             * "maximalNumberDefinitions":"10",
-             * "timeoutJobDelivery":"100",
-             * "fnsUserTypes":"PRIMARY_USER",
-             * "reviewLocation":false,
-             * "maximalNumberHistoryEntries":"100",
-             * "spatialTolerance":"25",
-             * "maximalNumberActiveDefinitions":"4",
-             * "debouncePreTime":"10"
-             */
-            public String debouncePostTime;
-            public String persistenceTimeHistoryEntries;
-            public String maximalNumberDefinitions;
-            public String timeoutJobDelivery;
-            public String fnsUserTypes;
-            public Boolean reviewLocation;
-            public String maximalNumberHistoryEntries;
-            public String spatialTolerance;
-            public String maximalNumberActiveDefinitions;
-            public String debouncePreTime;
-        }
-
-        public CarNetGeoFenceConfig geofencingConfiguration;
-    }
-
-    public static class CNGeoFenceAlerts {
-        public static class CarNetGeoFenceAlerts {
-            public static class CarNetGeoFenceAlertEntry {
-                /*
-                 * "id":"1776965",
-                 * "alertType":"ENTER_REDZONE",
-                 * "definitionId":"182818",
-                 * "definitionName":"Nach Hause",
-                 * "occurenceDateTime":"2021-05-26T16:18:18Z"
-                 */
-                public String id;
-                public String alertType;
-                public String definitionName;
-                public String occurenceDateTime;
-            }
-
-            public ArrayList<CarNetGeoFenceAlertEntry> geofencingAlert = new ArrayList<>();
-        }
-
-        public CarNetGeoFenceAlerts geofencingAlerts;
-    }
-
     public static class CNHeaterVentilation {
         public class CarNetHeaterVentilationStatus {
             public class ClimatisationStateReport {
@@ -1099,6 +922,5 @@ public class CarNetApiGSonDTO {
 
         public CarNetRequestStatus requestStatusResponse;
         public CarNetActionStatus action;
-        public CNHonkFlashResponse.CarNetHonkFlashResponse.CNFonkFlashStatusCode status;
     }
 }

@@ -78,18 +78,16 @@ public class CarNetPendingRequest {
                 if (rsp.honkAndFlashRequest != null) {
                     this.requestId = rsp.honkAndFlashRequest.id;
                     this.status = rsp.honkAndFlashRequest.status.statusCode;
-                    checkUrl = "bs/rhf/v1/{0}/{1}/vehicles/{2}/honkAndFlash/'" + requestId + "'/status";
                 }
+                checkUrl = "bs/rhf/v1/{0}/{1}/vehicles/{2}/honkAndFlash/" + requestId + "/status";
                 break;
             default:
                 logger.debug("Unable to queue request, unknown service type {}}.{}", service, action);
         }
     }
 
-    public static boolean isInProgress(String status) {
-        String st = status.toLowerCase();
-        return CNAPI_REQUEST_IN_PROGRESS.equals(st) || CNAPI_REQUEST_QUEUED.equals(st)
-                || CNAPI_REQUEST_FETCHED.equals(st) || CNAPI_REQUEST_STARTED.equals(st);
+    public boolean isInProgress() {
+        return CNAPI_REQUEST_IN_PROGRESS.equalsIgnoreCase(status) || CNAPI_REQUEST_QUEUED.equalsIgnoreCase(status);
     }
 
     public boolean isExpired() {
