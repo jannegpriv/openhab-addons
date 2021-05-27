@@ -84,6 +84,7 @@ public class CarNetBindingConstants {
     public static final String CHANNEL_CONTROL_VENT = "ventilation";
     public static final String CHANNEL_CONTROL_FLASH = "flash";
     public static final String CHANNEL_CONTROL_HONKFLASH = "honkFlash";
+    public static final String CHANNEL_CONTROL_HFDURATION = "hfDuration";
 
     public static final String CHANNEL_GROUP_LOCATION = "location";
     public static final String CHANNEL_LOCATTION_GEO = "locationPosition";
@@ -92,6 +93,7 @@ public class CarNetBindingConstants {
     public static final String CHANNEL_PARK_LOCATION = "parkingPosition";
     public static final String CHANNEL_PARK_ADDRESS = "parkingAddress";
     public static final String CHANNEL_PARK_TIME = "parkingTime";
+    public static final String CHANNEL_CAR_MOVING = "carMoving";
 
     public static final String CHANNEL_GROUP_CLIMATER = "climater";
     public static final String CHANNEL_CLIMATER_TARGET_TEMP = "targetTemperature";
@@ -139,6 +141,17 @@ public class CarNetBindingConstants {
     public static final String CHANNEL_DEST_COUNTY = "destinationCountry";
     public static final String CHANNEL_DEST_SOURCE = "destinationSource";
 
+    public static final String CHANNEL_GROUP_SPEEDALERT = "speedAlerts";
+    public static final String CHANNEL_SPEEDALERT_TYPE = "speedAlertType";
+    public static final String CHANNEL_SPEEDALERT_DESCR = "speedAlertDescr";
+    public static final String CHANNEL_SPEEDALERT_TIME = "speedAlertTime";
+    public static final String CHANNEL_SPEEDALERT_LIMIT = "speedAlertLimit";
+
+    public static final String CHANNEL_GROUP_GEOFENCE = "geoFenceAlerts";
+    public static final String CHANNEL_GEOFENCE_TYPE = "geoFenceAlertType";
+    public static final String CHANNEL_GEOFENCE_DESCR = "geoFenceAlertDescr";
+    public static final String CHANNEL_GEOFENCE_TIME = "geoFenceAlertTime";
+
     // Other channels group in here
     public static final String CHANNEL_GROUP_STATUS = "status";
     public static final String CHANNEL_GROUP_RANGE = "range";
@@ -183,6 +196,7 @@ public class CarNetBindingConstants {
     public static final String CNAPI_BRAND_VWGO = "Go";
     public static final String CNAPI_BRAND_SKODA = "Skoda";
     public static final String CNAPI_BRAND_SEAT = "Seat";
+    public static final String CNAPI_BRAND_NULL = "NULL";
 
     public static final String CONTENT_TYPE_FORM_URLENC = "application/x-www-form-urlencoded";
     public static final String CONTENT_TYPE_JSON = "application/json";
@@ -192,6 +206,9 @@ public class CarNetBindingConstants {
     public static final int API_REQUEST_TIMEOUT_SEC = 120 + 5;
     public static final int API_REQUEST_CHECK_INT = 15 / POLL_INTERVAL_SEC; // interval for checking pending requests
     public static final int API_TIMEOUT_MS = 60 * 1000;
+
+    public static int VENT_DEFAULT_DURATION_MIN = 30;
+    public static int HF_DEFAULT_DURATION_SEC = 10;
 
     public static final Unit<Length> KILOMETRE = MetricPrefix.KILO(SIUnits.METRE);
     public static final Unit<Power> KWATT = MetricPrefix.KILO(Units.WATT);
