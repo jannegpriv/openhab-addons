@@ -2,8 +2,6 @@
 
 This is an openHAB binding for Lynk&Co vehicles in Europe.
 
-![Electrolux Pure A9](doc/electrolux_pure_a9.png)
-
 ## Supported Things
 
 This binding supports the following thing types:
@@ -24,8 +22,8 @@ Only the bridge require manual configuration. The Lynkco vehicle thing can be ad
 
 | Parameter | Description                                                  | Type   | Default  | Required |
 |-----------|--------------------------------------------------------------|--------|----------|----------|
-| username  | The username used to connect to the Electrolux app           | String | NA       | yes      |        
-| password  | The password used to connect to the Electrolux app           | String | NA       | yes      |
+| username  | The username used to connect to the Lynk&Co app           | String | NA       | yes      |        
+| password  | The password used to connect to the Lynk&Co app           | String | NA       | yes      |
 | refresh   | Specifies the refresh interval in second                     | Number | 600      | yes      |
 
 #### Lynkco Vehicle
@@ -36,7 +34,7 @@ Only the bridge require manual configuration. The Lynkco vehicle thing can be ad
 
 ## Channels
 
-### Electrolux Pure A9
+### Lynk&Co 01
 
 The following channels are supported:
 

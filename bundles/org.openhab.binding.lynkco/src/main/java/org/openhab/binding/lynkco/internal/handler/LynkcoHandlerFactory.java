@@ -52,7 +52,7 @@ import com.google.gson.Gson;
  * @author Jan Gustafsson - Initial contribution
  */
 @NonNullByDefault
-@Component(configurationPid = "binding.electroluxair", service = ThingHandlerFactory.class)
+@Component(configurationPid = "binding.lynkco", service = ThingHandlerFactory.class)
 public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
 
     private final Logger logger = LoggerFactory.getLogger(LynkcoHandlerFactory.class);
@@ -115,7 +115,7 @@ public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
 
                 // Create and start the HttpClient with the custom SSLContext
                 this.httpClient = new HttpClient(new SslContextFactory.Client());
-                ((SslContextFactory.Client) httpClient.getSslContextFactory()).setSslContext(sslContext);
+                httpClient.getSslContextFactory().setSslContext(sslContext);
                 this.httpClient.start();
             } catch (Exception e) {
                 logger.error("Exception: {}", e.getMessage());

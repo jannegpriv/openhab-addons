@@ -19,16 +19,9 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.lynkco.internal.LynkcoBindingConstants;
 import org.openhab.binding.lynkco.internal.LynkcoConfiguration;
 import org.openhab.binding.lynkco.internal.api.LynkcoAPI;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO;
-import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.OpenClosedType;
-import org.openhab.core.library.types.QuantityType;
-import org.openhab.core.library.types.StringType;
-import org.openhab.core.library.unit.SIUnits;
-import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
@@ -72,55 +65,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 }
             }
         } else {
-            LynkcoDTO dto = getLynkcoDTO();
-            LynkcoAPI api = getLynkcoAPI();
-            if (api != null && dto != null) {
-                if (CHANNEL_WORK_MODE.equals(channelUID.getId())) {
-                    if (command.toString().equals(COMMAND_WORKMODE_POWEROFF)) {
-                        api.workModePowerOff(dto.getApplianceId());
-                    } else if (command.toString().equals(COMMAND_WORKMODE_AUTO)) {
-                        api.workModeAuto(dto.getApplianceId());
-                    } else if (command.toString().equals(COMMAND_WORKMODE_MANUAL)) {
-                        api.workModeManual(dto.getApplianceId());
-                    }
-                } else if (CHANNEL_FAN_SPEED.equals(channelUID.getId())) {
-                    api.setFanSpeedLevel(dto.getApplianceId(), Integer.parseInt(command.toString()));
-                } else if (CHANNEL_IONIZER.equals(channelUID.getId())) {
-                    if (command == OnOffType.OFF) {
-                        api.setIonizer(dto.getApplianceId(), "false");
-                    } else if (command == OnOffType.ON) {
-                        api.setIonizer(dto.getApplianceId(), "true");
-                    } else {
-                        logger.debug("Unknown command! {}", command);
-                    }
-                } else if (CHANNEL_UI_LIGHT.equals(channelUID.getId())) {
-                    if (command == OnOffType.OFF) {
-                        api.setUILight(dto.getApplianceId(), "false");
-                    } else if (command == OnOffType.ON) {
-                        api.setUILight(dto.getApplianceId(), "true");
-                    } else {
-                        logger.debug("Unknown command! {}", command);
-                    }
-                } else if (CHANNEL_SAFETY_LOCK.equals(channelUID.getId())) {
-                    if (command == OnOffType.OFF) {
-                        api.setSafetyLock(dto.getApplianceId(), "false");
-                    } else if (command == OnOffType.ON) {
-                        api.setSafetyLock(dto.getApplianceId(), "true");
-                    } else {
-                        logger.debug("Unknown command! {}", command);
-                    }
-                }
 
-                Bridge bridge = getBridge();
-                if (bridge != null) {
-                    BridgeHandler bridgeHandler = bridge.getHandler();
-                    if (bridgeHandler != null) {
-                        bridgeHandler.handleCommand(
-                                new ChannelUID(this.thing.getUID(), LynkcoBindingConstants.CHANNEL_STATUS),
-                                RefreshType.REFRESH);
-                    }
-                }
-            }
         }
     }
 
@@ -181,36 +126,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     private State getValue(String channelId, LynkcoDTO dto) {
-        switch (channelId) {
-            case CHANNEL_TEMPERATURE:
-                return new QuantityType<>(dto.getProperties().getReported().getTemp(), SIUnits.CELSIUS);
-            case CHANNEL_HUMIDITY:
-                return new QuantityType<>(dto.getProperties().getReported().getHumidity(), Units.PERCENT);
-            case CHANNEL_TVOC:
-                return new QuantityType<>(dto.getProperties().getReported().getTVOC(), Units.MICROGRAM_PER_CUBICMETRE);
-            case CHANNEL_PM1:
-                return new QuantityType<>(dto.getProperties().getReported().getPM1(), Units.PARTS_PER_BILLION);
-            case CHANNEL_PM25:
-                return new QuantityType<>(dto.getProperties().getReported().getPM25(), Units.PARTS_PER_BILLION);
-            case CHANNEL_PM10:
-                return new QuantityType<>(dto.getProperties().getReported().getPM10(), Units.PARTS_PER_BILLION);
-            case CHANNEL_CO2:
-                return new QuantityType<>(dto.getProperties().getReported().getCO2(), Units.PARTS_PER_MILLION);
-            case CHANNEL_FAN_SPEED:
-                return new StringType(Integer.toString(dto.getProperties().getReported().getFanspeed()));
-            case CHANNEL_FILTER_LIFE:
-                return new QuantityType<>(dto.getProperties().getReported().getFilterLife(), Units.PERCENT);
-            case CHANNEL_IONIZER:
-                return OnOffType.from(dto.getProperties().getReported().isIonizer());
-            case CHANNEL_UI_LIGHT:
-                return OnOffType.from(dto.getProperties().getReported().isUILight());
-            case CHANNEL_SAFETY_LOCK:
-                return OnOffType.from(dto.getProperties().getReported().isSafetyLock());
-            case CHANNEL_WORK_MODE:
-                return new StringType(dto.getProperties().getReported().getWorkmode());
-            case CHANNEL_DOOR_OPEN:
-                return dto.getProperties().getReported().isDoorOpen() ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
-        }
+
         return UnDefType.UNDEF;
     }
 
