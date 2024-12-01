@@ -25,6 +25,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.core.thing.Thing;
 import org.slf4j.Logger;
@@ -51,6 +52,8 @@ public class LynkcoTokenManager {
     private static final String PROPERTY_REFRESH_TOKEN = "refreshToken";
     private static final String PROPERTY_USER_ID = "userId";
 
+    private static final String TOKEN_URL = "https://login.lynkco.com/dc6c7c0c-5ba7-414a-a7d1-d62ca1f73d13/b2c_1a_signin_mfa/oauth2/v2.0/token";
+
     // Cache fields
     private @Nullable String cachedCccToken;
     private @Nullable String cachedAccessToken;
@@ -76,6 +79,7 @@ public class LynkcoTokenManager {
             String cccToken = sendDeviceLogin(authToken);
             if (cccToken != null) {
                 updateToken(PROPERTY_CCC_TOKEN, cccToken);
+                loadTokensFromProperties();
             } else {
                 clearTokens();
                 throw new LynkcoApiException("Failed to obtain CCC token after updating tokens",
@@ -125,16 +129,9 @@ public class LynkcoTokenManager {
     }
 
     private boolean isTokenExpired(@Nullable String token) {
-        try {
-            if (token != null) {
-                String payload = decodeJwtToken(token);
-                JsonObject jsonPayload = JsonParser.parseString(payload).getAsJsonObject();
-                long expTime = jsonPayload.get("exp").getAsLong();
-                return Instant.now().getEpochSecond() > expTime;
-            }
-        } catch (Exception e) {
-            logger.warn("Error checking token expiration: {}", e.getMessage());
-            return true;
+        if (token != null && cachedTokenExpiration != null) {
+            Long cachedTokenExpiration2 = cachedTokenExpiration;
+            return Instant.now().getEpochSecond() > cachedTokenExpiration2;
         }
         return true;
     }
@@ -165,12 +162,11 @@ public class LynkcoTokenManager {
 
         try {
             // Prepare headers
-            Request request = httpClient.newRequest(
-                    "https://login.lynkco.com/dc6c7c0c-5ba7-414a-a7d1-d62ca1f73d13/b2c_1a_signin_mfa/oauth2/v2.0/token")
-                    .method(HttpMethod.POST).header("user-agent", "LynkCo/3016 CFNetwork/1492.0.1 Darwin/23.3.0")
-                    .header("accept", "application/json").header("content-type", "application/x-www-form-urlencoded")
-                    .header("Accept-Encoding", "gzip, deflate, br").header("Connection", "keep-alive")
-                    .param("refresh_token", refreshToken).param("grant_type", "refresh_token");
+            Request request = httpClient.newRequest(TOKEN_URL).method(HttpMethod.POST)
+                    .agent("LynkCo/3016 CFNetwork/1492.0.1 Darwin/23.3.0").header(HttpHeader.ACCEPT, "application/json")
+                    .header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded")
+                    .header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br").param("refresh_token", refreshToken)
+                    .param("grant_type", "refresh_token");
 
             ContentResponse response = request.send();
 

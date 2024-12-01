@@ -18,8 +18,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -60,15 +58,12 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Set.of(THING_TYPE_BRIDGE);
 
-    private int refreshTimeInSeconds = 300;
-
     private final Gson gson;
     private final HttpClient httpClient;
     private final Map<String, LynkcoDTO> lynkcoThings = new ConcurrentHashMap<>();
 
     private @Nullable LynkcoAPI api;
-    private @Nullable LynkcoTokenManager tokenManager;
-    private @Nullable ScheduledFuture<?> refreshJob;
+    private LynkcoTokenManager tokenManager;
     private boolean waitingForMfa = false;
     private @Nullable LoginResponse pendingMfaResponse;
 
@@ -76,40 +71,30 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
         super(bridge);
         this.httpClient = httpClient;
         this.gson = gson;
+        this.tokenManager = new LynkcoTokenManager(getThing(), httpClient);
     }
 
     @Override
     public void initialize() {
         LynkcoBridgeConfiguration config = getConfigAs(LynkcoBridgeConfiguration.class);
 
-        this.api = new LynkcoAPI(config, gson, httpClient);
-        this.tokenManager = new LynkcoTokenManager(getThing(), httpClient);
-        refreshTimeInSeconds = config.refresh;
+        this.api = new LynkcoAPI(config, gson, httpClient, tokenManager);
 
-        if (config.email == null || config.password == null) {
+        if (config.email.isEmpty() || config.password.isEmpty()) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Configuration of email and password are mandatory");
-        } else if (refreshTimeInSeconds < 0) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Refresh time cannot be negative!");
         } else {
             updateStatus(ThingStatus.UNKNOWN);
-            this.tokenManager = new LynkcoTokenManager(getThing(), httpClient);
             scheduler.execute(this::initializeAuthentication);
         }
     }
 
     @Override
     public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
-        // First, let the framework handle the update
-        // super.handleConfigurationUpdate(configurationParameters);
-
-        // Then check if this is an MFA code update
         if (configurationParameters.containsKey("mfa") && waitingForMfa) {
             String mfaCode = (String) configurationParameters.get("mfa");
 
-            // Only process if we have a valid MFA code
-            if (mfaCode != null && !mfaCode.isEmpty() && api != null && tokenManager != null) {
+            if (mfaCode != null && !mfaCode.isEmpty() && api != null) {
                 if (pendingMfaResponse != null) {
                     processMfaCode(mfaCode, pendingMfaResponse);
                 } else {
@@ -131,7 +116,9 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void dispose() {
-        stopAutomaticRefresh();
+        api = null;
+        waitingForMfa = false;
+        pendingMfaResponse = null;
     }
 
     public @Nullable LynkcoAPI getLynkcoAPI() {
@@ -140,21 +127,17 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     private void initializeAuthentication() {
         try {
-            if (api == null || tokenManager == null) {
+            if (api == null) {
                 return;
             }
 
             // First try to get a cached token
             try {
-                if (tokenManager != null) {
-                    String token = tokenManager.getCccToken();
-                    if (token != null) {
-                        // If we get here, we have a valid token
-                        logger.debug("Valid cached token found, starting normal operation");
-                        startAutomaticRefresh();
-                        return;
-                    }
-                } else {
+                String token = tokenManager.getCccToken();
+                if (token != null) {
+                    // If we get here, we have a valid token
+                    logger.debug("Valid cached token found, starting normal operation");
+                    // startAutomaticRefresh();
                     return;
                 }
             } catch (LynkcoApiException e) {
@@ -185,7 +168,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
                 // Handle MFA and get tokens
                 TokenResponse tokenResponse = api.handleMFACode(mfaCode, mfaResponse);
 
-                if (tokenManager != null && tokenResponse.success) {
+                if (tokenResponse.success) {
                     // Store tokens in TokenManager
                     tokenManager.updateTokens(tokenResponse.authToken, tokenResponse.refreshToken);
 
@@ -197,9 +180,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
                     // Clear MFA code from configuration
                     clearMfaCode();
-
-                    // Start normal operation
-                    startAutomaticRefresh();
+                    updateStatus(ThingStatus.ONLINE);
 
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
@@ -222,78 +203,10 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
         updateConfiguration(configuration);
     }
 
-    @SuppressWarnings("null")
-    private void refreshAndUpdateStatus() {
-        try {
-            // Get token (this will refresh if needed)
-            if (tokenManager != null && api != null) {
-                String cccToken = tokenManager.getCccToken();
-                if (cccToken == null) {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                            "Could not obtain valid token");
-                    return;
-                }
-
-                updateStatus(ThingStatus.ONLINE);
-
-                if (api.refresh(lynkcoThings, cccToken)) {
-                    getThing().getThings().stream().forEach(thing -> {
-                        LynkcoVehicleHandler handler = (LynkcoVehicleHandler) thing.getHandler();
-                        if (handler != null) {
-                            handler.update();
-                        }
-                    });
-                    updateStatus(ThingStatus.ONLINE);
-                    return;
-                } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-                }
-            } else {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                        "Could not obtain valid token");
-                return;
-            }
-        } catch (LynkcoApiException e) {
-            switch (e.getErrorType()) {
-                case AUTHENTICATION_REQUIRED:
-                    // Token is invalid/expired and refresh failed, need to re-authenticate
-                    logger.debug("Authentication required, restarting login flow");
-                    scheduler.execute(this::initializeAuthentication);
-                    break;
-                case NETWORK_ERROR:
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "Network error: " + e.getMessage());
-                    break;
-                default:
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                            "Error refreshing data: " + e.getMessage());
-            }
-        }
-    }
-
-    private void startAutomaticRefresh() {
-        ScheduledFuture<?> refreshJob = this.refreshJob;
-        if (refreshJob == null || refreshJob.isCancelled()) {
-            this.refreshJob = scheduler.scheduleWithFixedDelay(this::refreshAndUpdateStatus, 0, refreshTimeInSeconds,
-                    TimeUnit.SECONDS);
-        }
-    }
-
-    private void stopAutomaticRefresh() {
-        if (refreshJob != null) {
-            refreshJob.cancel(true);
-            this.refreshJob = null;
-        }
-        waitingForMfa = false;
-        pendingMfaResponse = null;
-        tokenManager = null;
-        api = null;
-    }
-
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (CHANNEL_STATUS.equals(channelUID.getId()) && command instanceof RefreshType) {
-            scheduler.schedule(this::refreshAndUpdateStatus, 1, TimeUnit.SECONDS);
+            return;
         }
     }
 }

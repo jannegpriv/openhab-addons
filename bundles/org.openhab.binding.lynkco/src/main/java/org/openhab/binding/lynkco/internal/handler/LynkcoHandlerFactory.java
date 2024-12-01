@@ -88,6 +88,41 @@ public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
     @Reference
     protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
         logger.debug("setHttpClientFactory this: {}", this);
+
+        // Create an SSL Context Factory with SSL verification disabled
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+
+        // Disable all SSL verification
+        sslContextFactory.setTrustAll(true);
+        sslContextFactory.setValidateCerts(false);
+        sslContextFactory.setValidatePeerCerts(false);
+        sslContextFactory.setEndpointIdentificationAlgorithm(null);
+
+        // Create new HttpClient with SSL disabled
+        this.httpClient = new HttpClient(sslContextFactory);
+
+        // Only add proxy configuration if in DEBUG mode
+        if (DEBUG) {
+            try {
+                ProxyConfiguration proxyConfig = httpClient.getProxyConfiguration();
+                HttpProxy proxy = new HttpProxy("127.0.0.1", 8090);
+                proxyConfig.getProxies().add(proxy);
+            } catch (Exception e) {
+                logger.error("Failed to configure proxy: {}", e.getMessage(), e);
+            }
+        }
+
+        try {
+            this.httpClient.start();
+            logger.debug("HTTP client configured with SSL verification disabled");
+        } catch (Exception e) {
+            logger.error("Failed to start HTTP client: {}", e.getMessage(), e);
+        }
+    }
+
+    @Reference
+    protected void setHttpClientFactory2(HttpClientFactory httpClientFactory) {
+        logger.debug("setHttpClientFactory this: {}", this);
         this.httpClient = httpClientFactory.getCommonHttpClient();
         if (DEBUG) {
             try {

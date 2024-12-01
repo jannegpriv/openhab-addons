@@ -15,7 +15,7 @@ package org.openhab.binding.lynkco.internal.discovery;
 import static org.openhab.binding.lynkco.internal.LynkcoBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.lynkco.internal.LynkcoConfiguration;
+import org.openhab.binding.lynkco.internal.LynkcoVehicleConfiguration;
 import org.openhab.binding.lynkco.internal.handler.LynkcoBridgeHandler;
 import org.openhab.core.config.discovery.AbstractThingHandlerDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
@@ -44,8 +44,8 @@ public class LynkcoDiscoveryService extends AbstractThingHandlerDiscoveryService
         thingHandler.getLynkcoThings().entrySet().stream().forEach(thing -> {
             thingDiscovered(DiscoveryResultBuilder.create(new ThingUID(THING_TYPE_VEHICLE, bridgeUID, thing.getKey()))
                     .withLabel("LynkCo Vehicle").withBridge(bridgeUID)
-                    .withProperty(LynkcoConfiguration.DEVICE_ID_LABEL, thing.getKey())
-                    .withRepresentationProperty(LynkcoConfiguration.DEVICE_ID_LABEL).build());
+                    .withProperty(LynkcoVehicleConfiguration.DEVICE_ID_LABEL, thing.getKey())
+                    .withRepresentationProperty(LynkcoVehicleConfiguration.DEVICE_ID_LABEL).build());
         });
 
         stopScan();

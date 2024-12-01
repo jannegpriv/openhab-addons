@@ -32,6 +32,7 @@ public class LynkcoApiException extends Exception {
         MFA_EXPIRED,
         TOKEN_EXPIRED,
         REFRESH_TOKEN_EXPIRED,
+        API_ERROR,
         UNKNOWN_ERROR
     }
 

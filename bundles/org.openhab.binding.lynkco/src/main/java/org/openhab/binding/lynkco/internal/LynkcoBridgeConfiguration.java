@@ -22,8 +22,8 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 @NonNullByDefault
 public class LynkcoBridgeConfiguration {
-    public @Nullable String email;
-    public @Nullable String password;
+    public String email = "";
+    public String password = "";
     public @Nullable String mfaCode;
     public int refresh;
 }
