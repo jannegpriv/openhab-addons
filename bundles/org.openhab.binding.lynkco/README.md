@@ -272,81 +272,67 @@ startClimate(int climateLevel, int duration)  // Start climate control
 stopClimate()                                 // Stop climate control
 startEngine(int duration)                     // Start engine
 stopEngine()                                  // Stop engine
-lockDoors()                                  // Lock all doors
-unlockDoors()                                // Unlock all doors
-honkBlink(boolean honk, boolean blink)       // Control horn and lights
-
-
-
-
-
-# Lynkco Binding
-
-This is an openHAB binding for Lynk&Co vehicles in Europe.
-
-## Supported Things
-
-This binding supports the following thing types:
-
-- api: Bridge - Implements the API that is used to communicate with Lynk&Co cloud service
-
-- lynkco: The Lynk&Co vehicle
-
-## Discovery
-
-After the configuration of the Bridge, your Lynk&Co vehicle will be automatically discovered and placed as a thing in the inbox.
-
-### Configuration Options
-
-Only the bridge require manual configuration. The Lynkco vehicle thing can be added by hand, or you can let the discovery mechanism automatically find it.
-
-#### Bridge
-
-| Parameter | Description                                                  | Type   | Default  | Required |
-|-----------|--------------------------------------------------------------|--------|----------|----------|
-| username  | The username used to connect to the Lynk&Co app           | String | NA       | yes      |        
-| password  | The password used to connect to the Lynk&Co app           | String | NA       | yes      |
-| refresh   | Specifies the refresh interval in second                     | Number | 600      | yes      |
-
-#### Lynkco Vehicle
-
-| Parameter | Description                                                  | Type   | Default  | Required |
-|-----------|--------------------------------------------------------------|--------|----------|----------|
-| vin       | Vehicle Identification Number (VIN) found in Lynk&Co app     | String | NA       | yes      |
-
-## Channels
-
-### Lynk&Co 01
-
-The following channels are supported:
-
-| Channel Type ID             | Item Type             | Description                                                                    |
-|-----------------------------|-----------------------|--------------------------------------------------------------------------------|
-| temperature                 | Number:Temperature    | This channel reports the current temperature.                                  |
-| humidity                    | Number:Dimensionless  | This channel reports the current humidity in percentage.                       |
-| tvoc                        | Number:Density        | This channel reports the total Volatile Organic Compounds in microgram/m3.     |
-| pm1                         | Number:Dimensionless  | This channel reports the Particulate Matter 1 in ppb.                          |
-| pm2_5                       | Number:Dimensionless  | This channel reports the Particulate Matter 2.5 in ppb.                        |
-| pm10                        | Number:Dimensionless  | This channel reports the Particulate Matter 10 in ppb.                         |
-| co2                         | Number:Dimensionless  | This channel reports the CO2 level in ppm.                                     |
-| fanSpeed                    | Number                | This channel sets and reports the current fan speed (1-9).                     |
-| filterLife                  | Number:Dimensionless  | This channel reports the remaining filter life in %.                           |
-| ionizer                     | Switch                | This channel sets and reports the status of the Ionizer function (On/Off).     |
-| doorOpen                    | Contact               | This channel reports the status of door (Opened/Closed).                       |
-| workMode                    | String                | This channel sets and reports the current work mode (Auto, Manual, PowerOff.)  |
-| uiLIght                     | Switch                | This channel sets and reports the status of the UI Light function (On/Off).    |
-| safetyLock                  | Switch                | This channel sets and reports the status of the Safety Lock  function (On/Off).|
-
-## Full Example
+lockDoors()                                   // Lock all doors
+unlockDoors()                                 // Unlock all doors
+honkBlink(boolean honk, boolean blink)        // Control horn and lights
+```
 
 ### Things-file
 
 ```java
 // Bridge configuration
-Bridge electroluxair:api:myAPI "Electrolux Delta API" [username="user@password.com", password="12345", refresh="300"] {
-
-     Thing electroluxpurea9 myElectroluxPureA9  "Electrolux Pure A9"    [ deviceId="123456789" ]
-     
+Bridge lynkco:api:mycar "Lynk&Co API" [ 
+    email="user@example.com", 
+    password="secret"
+] {
+    // Vehicle configuration
+    Thing vehicle car "My Lynk&Co 01" [ 
+        vin="YOUR_VIN_NUMBER", 
+        refresh=5
+    ]
 }
 ```
+
+### Items-file
+
+```java
+// Status Items
+Group gCar "My Lynk&Co 01"
+
+// Doors
+Contact Car_DoorDriver        "Driver Door [%s]"          (gCar) {channel="lynkco:vehicle:mycar:car:doors#door-driver"}
+Contact Car_DoorPassenger     "Passenger Door [%s]"       (gCar) {channel="lynkco:vehicle:mycar:car:doors#door-passenger"}
+Switch  Car_LocksStatus       "Locks [%s]"               (gCar) {channel="lynkco:vehicle:mycar:car:doors#locks-status"}
+
+// Climate
+Number:Temperature Car_TempExt "Outside Temperature [%.1f %unit%]" (gCar) {channel="lynkco:vehicle:mycar:car:climate#temp-exterior"}
+Number:Temperature Car_TempInt "Inside Temperature [%.1f %unit%]"  (gCar) {channel="lynkco:vehicle:mycar:car:climate#temp-interior"}
+
+// Battery and Charging
+Number:Dimensionless Car_BatteryLevel "Battery Level [%.1f %%]" (gCar) {channel="lynkco:vehicle:mycar:car:battery#charge-level"}
+String Car_ChargerState       "Charging State [%s]"      (gCar) {channel="lynkco:vehicle:mycar:car:charging#charger-state"}
+Number:Time Car_ChargingTime  "Time to Full [%d %unit%]" (gCar) {channel="lynkco:vehicle:mycar:car:charging#time-to-full"}
+
+// Location
+Location Car_Location         "Car Location"              (gCar) {channel="lynkco:vehicle:mycar:car:position#location"}
+
+// Controls
+Switch Car_Lock              "Lock Car"                  (gCar) {channel="lynkco:vehicle:mycar:car:doors-control#lock"}
+Switch Car_Climate           "Climate Control"           (gCar) {channel="lynkco:vehicle:mycar:car:climate-control#preclimate"}
+Switch Car_Engine            "Engine"                    (gCar) {channel="lynkco:vehicle:mycar:car:engine-control#start"}
+Switch Car_Horn              "Horn"                      (gCar) {channel="lynkco:vehicle:mycar:car:horn-control#honk"}
+````
+
+### Rule-example
+
+```
+rule "Start Climate Control Morning"
+when
+    Time cron "0 30 7 ? * MON-FRI"
+then
+    val actions = getActions("lynkco", "lynkco:vehicle:mycar:car")
+    actions.startClimate(2, 15)  // Level 2, 15 minutes
+end
+```
+
 
