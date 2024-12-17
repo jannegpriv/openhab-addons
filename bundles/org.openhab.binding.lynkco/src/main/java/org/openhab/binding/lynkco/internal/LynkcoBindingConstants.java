@@ -108,11 +108,8 @@ public class LynkcoBindingConstants {
     public static final String BATTERY_CHARGE_LEVEL = "charge-level";
     public static final String BATTERY_TIME_TO_CHARGE = "time-to-charge";
     public static final String BATTERY_RANGE = "range-electric";
-    public static final String CHARGER_STATE = "charger-state";
     public static final String BATTERY_CHARGE = "charge";
-    public static final String BATTERY_ENERGY_LEVEL = "energy-level";
     public static final String BATTERY_HEALTH = "health";
-    public static final String BATTERY_POWER_LEVEL = "power-level";
     public static final String BATTERY_VOLTAGE = "voltage";
     public static final String BATTERY_ENERGY = "energy-level";
     public static final String BATTERY_POWER = "power-level";
@@ -120,6 +117,9 @@ public class LynkcoBindingConstants {
     public static final String CHARGING_LEVEL = "charging-level";
     public static final String CHARGING_RANGE = "range";
     public static final String CHARGING_TIME = "time-to-full";
+    public static final String CHARGER_STATE = "charger-state";
+    public static final String CHARGER_CONNECTION_STATUS = "charger-connection-status";
+    public static final String POWER_MODE = "power-mode";
 
     // Climate channels
     public static final String TEMPERATURE_EXTERIOR = "temp-exterior";

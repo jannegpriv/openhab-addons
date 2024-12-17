@@ -157,8 +157,14 @@
 				<label>Fuel Range</label>
 				<description>Estimated driving range on remaining fuel</description>
 			</channel>
-			<channel id="consumption" typeId="fuel-consumption"/>
-			<channel id="consumption-last-trip" typeId="fuel-onsumption"/>
+			<channel id="consumption" typeId="fuel-consumption">
+				<label>Average Fuel Consumption</label>
+				<description>Average Fuel Consumption in l/100km</description>
+			</channel>
+			<channel id="consumption-last-trip" typeId="fuel-consumption">
+				<label>Average Fuel Consumption Last Trip</label>
+				<description>Average Fuel Consumption Last Trip in l/100km</description>
+			</channel>
 		</channels>
 	</channel-group-type>
 
@@ -208,6 +214,9 @@
 				<description>Estimated driving range on battery power</description>
 			</channel>
 			<channel id="time-to-full" typeId="charging-time"/>
+			<channel id="charger-connection-status" typeId="charger-connection-status"/>
+			<channel id="charger-state" typeId="charger-state"/>
+			<channel id="power-mode" typeId="power-mode"/>
 		</channels>
 	</channel-group-type>
 
@@ -442,7 +451,7 @@
 	</channel-type>
 
 	<channel-type id="fuel-level">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>Number:Volume</item-type>
 		<label>Fuel Level</label>
 		<category>Energy</category>
 		<state pattern="%.1f %unit%" readOnly="true"/>
@@ -452,7 +461,7 @@
 		<item-type>Number</item-type>
 		<label>Fuel Level Status</label>
 		<category>Energy</category>
-		<state readOnly="true"/>
+		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
 
 	<channel-type id="fuel-type">
@@ -462,12 +471,42 @@
 		<state readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="charge-status">
+	<channel-type id="charger-connection-status">
 		<item-type>String</item-type>
-		<label>Charge Status</label>
-		<description>Current status of the charging system</description>
+		<label>Charger Connection Status</label>
+		<description>Status of charger connection</description>
 		<category>Energy</category>
-		<state readOnly="true"/>
+		<state readOnly="true">
+			<options>
+				<option value="CHARGER_CONNECTION_UNSPECIFIED">Unspecified</option>
+				<option value="CHARGER_CONNECTION_DISCONNECTED">Disconnected</option>
+				<option value="CHARGER_CONNECTION_CONNECTED_WITHOUT_POWER">Connected (No Power)</option>
+				<option value="CHARGER_CONNECTION_POWER_AVAILABLE_BUT_NOT_ACTIVATED">Power Not Activated</option>
+				<option value="CHARGER_CONNECTION_CONNECTED_WITH_POWER">Connected</option>
+				<option value="CHARGER_CONNECTION_INIT">Initializing</option>
+				<option value="CHARGER_CONNECTION_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="charger-state">
+		<item-type>String</item-type>
+		<label>Charging State</label>
+		<description>Current charging state</description>
+		<category>Energy</category>
+		<state readOnly="true">
+			<options>
+				<option value="CHARGER_STATE_UNSPECIFIED">Unspecified</option>
+				<option value="CHARGER_STATE_IDLE">Idle</option>
+				<option value="CHARGER_STATE_PRE_STRT">Pre-Start</option>
+				<option value="CHARGER_STATE_CHARGN">Charging</option>
+				<option value="CHARGER_STATE_ALRM">Alarm</option>
+				<option value="CHARGER_STATE_SRV">Service</option>
+				<option value="CHARGER_STATE_DIAG">Diagnostics</option>
+				<option value="CHARGER_STATE_BOOT">Boot</option>
+				<option value="CHARGER_STATE_RSTRT">Restart</option>
+			</options>
+		</state>
 	</channel-type>
 
 	<channel-type id="charging-time">

@@ -60,6 +60,7 @@ public class LynkcoTokenManager {
     private @Nullable String cachedRefreshToken;
     private @Nullable String cachedUserId;
     private @Nullable Long cachedTokenExpiration;
+    private int refreshCount = 0;
 
     public LynkcoTokenManager(Thing thing, HttpClient httpClient) {
         this.thing = thing;
@@ -101,6 +102,7 @@ public class LynkcoTokenManager {
                 String payload = decodeJwtToken(cachedCccToken);
                 JsonObject jsonPayload = JsonParser.parseString(payload).getAsJsonObject();
                 cachedTokenExpiration = jsonPayload.get("exp").getAsLong();
+                logger.debug("loadTokensFromProperties: cachedTokenExpiration: {}", cachedTokenExpiration);
             } catch (Exception e) {
                 logger.debug("Could not decode cached token expiration: {}", e.getMessage());
                 cachedTokenExpiration = null;
@@ -131,7 +133,12 @@ public class LynkcoTokenManager {
     private boolean isTokenExpired(@Nullable String token) {
         if (token != null && cachedTokenExpiration != null) {
             Long cachedTokenExpiration2 = cachedTokenExpiration;
-            return Instant.now().getEpochSecond() > cachedTokenExpiration2;
+            Long now = Instant.now().getEpochSecond();
+            boolean isExpired = now > cachedTokenExpiration2;
+            if (isExpired) {
+                logger.debug("CCC token has expired. Cached expiration: {}, Now: {}", cachedTokenExpiration2, now);
+            }
+            return isExpired;
         }
         return true;
     }
@@ -185,12 +192,14 @@ public class LynkcoTokenManager {
 
                 String accessToken = tokens.has("access_token") ? tokens.get("access_token").getAsString() : null;
                 if (accessToken != null) {
+                    logger.debug("Refreshed access token");
                     updateToken(PROPERTY_ACCESS_TOKEN, accessToken);
 
                     String cccToken = sendDeviceLogin(accessToken);
                     if (cccToken != null) {
                         logger.debug("Refreshed CCC token");
                         updateToken(PROPERTY_CCC_TOKEN, cccToken);
+                        loadTokensFromProperties();
                         return cccToken;
                     } else {
                         logger.error("New CCC token is null, please re-authenticate");
@@ -208,7 +217,13 @@ public class LynkcoTokenManager {
                         LynkcoApiException.ErrorType.NETWORK_ERROR);
             }
         } catch (Exception e) {
-            clearTokens();
+            if (refreshCount > 5) {
+                clearTokens();
+                refreshCount = 0;
+            } else {
+                logger.debug("refreshCount: {}", refreshCount);
+                refreshCount++;
+            }
             throw new LynkcoApiException("Error refreshing tokens: " + e.getMessage(),
                     LynkcoApiException.ErrorType.NETWORK_ERROR);
         }
@@ -281,6 +296,7 @@ public class LynkcoTokenManager {
 
     private void updateToken(String key, String value) {
         // Update both cache and properties
+        logger.debug("updateToken key: {}, value: {}", key, value);
         switch (key) {
             case PROPERTY_CCC_TOKEN:
                 cachedCccToken = value;
@@ -300,6 +316,7 @@ public class LynkcoTokenManager {
 
     private void clearTokens() {
         // Clear properties
+        logger.debug("clearTokens");
         Map<String, String> properties = new HashMap<>(thing.getProperties());
         properties.remove(PROPERTY_CCC_TOKEN);
         properties.remove(PROPERTY_ACCESS_TOKEN);

@@ -14,15 +14,7 @@ package org.openhab.binding.lynkco.internal.handler;
 
 import static org.openhab.binding.lynkco.internal.LynkcoBindingConstants.*;
 
-import java.io.FileInputStream;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
 import java.util.Set;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -60,7 +52,7 @@ public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_VEHICLE, THING_TYPE_BRIDGE);
     private final Gson gson;
     private HttpClient httpClient;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     @Activate
     public LynkcoHandlerFactory(@Reference HttpClientFactory httpClientFactory) {
@@ -117,49 +109,6 @@ public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
             logger.debug("HTTP client configured with SSL verification disabled");
         } catch (Exception e) {
             logger.error("Failed to start HTTP client: {}", e.getMessage(), e);
-        }
-    }
-
-    @Reference
-    protected void setHttpClientFactory2(HttpClientFactory httpClientFactory) {
-        logger.debug("setHttpClientFactory this: {}", this);
-        this.httpClient = httpClientFactory.getCommonHttpClient();
-        if (DEBUG) {
-            try {
-                // Load the mitmproxy CA certificate
-                FileInputStream caInput = new FileInputStream("/Users/janne/.mitmproxy/mitmproxy-ca-cert.pem");
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                Certificate ca;
-                try {
-                    ca = cf.generateCertificate(caInput);
-                } finally {
-                    caInput.close();
-                }
-
-                // Create a TrustStore with the CA certificate
-                KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                trustStore.load(null, null);
-                trustStore.setCertificateEntry("mitmproxy", ca);
-
-                // Initialize the SSLContext with the TrustStore
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init(trustStore);
-
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, tmf.getTrustManagers(), new SecureRandom());
-
-                // Create and start the HttpClient with the custom SSLContext
-                this.httpClient = new HttpClient(new SslContextFactory.Client());
-                httpClient.getSslContextFactory().setSslContext(sslContext);
-                this.httpClient.start();
-            } catch (Exception e) {
-                logger.error("Exception: {}", e.getMessage());
-            }
-
-            logger.debug("setHttpClientFactory configure proxy!");
-            ProxyConfiguration proxyConfig = httpClient.getProxyConfiguration();
-            HttpProxy proxy = new HttpProxy("127.0.0.1", 8090);
-            proxyConfig.getProxies().add(proxy);
         }
     }
 }

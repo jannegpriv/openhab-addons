@@ -33,6 +33,8 @@ import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Battery;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Bvs;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Climate;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.ElectricStatus;
+import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Evs;
+import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Evs.ChargerStatusData.ChargerState;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Fuel;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Position;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.RecordDTO;
@@ -296,7 +298,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case GROUP_BATTERY:
                 return getBatteryStatusValue(channelId, dto.record.battery);
             case GROUP_CHARGING:
-                return getChargingValue(channelId, dto.record.electricStatus);
+                return getChargingValue(channelId, dto.record.electricStatus, dto.shadow.evs);
             case GROUP_CLIMATE:
                 return getClimateValue(channelId, dto.record.climate);
             case GROUP_CLIMATE_CONTROL:
@@ -407,10 +409,6 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return new DateTimeType(record.odometer.vehicleUpdatedAt);
             case ODOMETER_KM:
                 return new QuantityType<>(record.odometer.odometerKm, KILO(METRE));
-            case TRIP_METER_1:
-                return new QuantityType<>(record.trip.tripMeter, KILO(METRE));
-            case TRIP_METER_2:
-                return new QuantityType<>(record.trip.tripMeter2, KILO(METRE));
         }
         return UnDefType.UNDEF;
     }
@@ -420,7 +418,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(fuel.vehicleUpdatedAt);
             case FUEL_LEVEL:
-                return new QuantityType<>(fuel.level, Units.PERCENT);
+                return new QuantityType<>(fuel.level, Units.LITRE);
             case FUEL_LEVEL_STATUS:
                 return new DecimalType(fuel.levelStatus);
             case FUEL_TYPE:
@@ -456,7 +454,9 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(battery.vehicleUpdatedAt);
             case BATTERY_CHARGE:
-                return new StringType(battery.charge);
+                String stateString = battery.charge;
+                ChargerState state = ChargerState.fromString(stateString);
+                return new StringType(state.name());
             case BATTERY_CHARGE_LEVEL:
                 return new QuantityType<>(battery.chargeLevel, Units.PERCENT);
             case BATTERY_ENERGY:
@@ -471,7 +471,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         return UnDefType.UNDEF;
     }
 
-    private State getChargingValue(String channelId, ElectricStatus electricStatus) {
+    private State getChargingValue(String channelId, ElectricStatus electricStatus, Evs evs) {
         switch (channelId) {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(electricStatus.vehicleUpdatedAt);
@@ -481,6 +481,13 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return new QuantityType<>(electricStatus.distanceToEmptyOnBatteryOnly, KILO(METRE));
             case CHARGING_TIME:
                 return new QuantityType<>(electricStatus.timeToFullyCharged, Units.MINUTE);
+            case CHARGER_CONNECTION_STATUS:
+                return new StringType(evs.chargerStatusData.chargerConnectionStatus.name());
+            case CHARGER_STATE:
+                return new StringType(evs.chargerStatusData.chargerState.name());
+            case POWER_MODE:
+                return new StringType(evs.powermodeStatus);
+
         }
         return UnDefType.UNDEF;
     }

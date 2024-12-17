@@ -79,7 +79,6 @@ public class LynkcoDTO {
         public String vehicleUpdatedAt = "";
     }
 
-    @NonNullByDefault
     public static class Fuel {
         public double averageConsumption;
         public double averageConsumptionLatestDrivingCycle;
@@ -143,13 +142,73 @@ public class LynkcoDTO {
 
     public static class Evs {
         public ChargerStatusData chargerStatusData = new ChargerStatusData();
-        public String powerModeUpdatedAt = "";
         public String powermodeStatus = "";
+        public String powerModeUpdatedAt = "";
 
         public static class ChargerStatusData {
-            public String chargerConnectionStatus = "";
-            public String chargerState = "";
+            public ChargerConnectionStatus chargerConnectionStatus = ChargerConnectionStatus.CHARGER_CONNECTION_UNSPECIFIED;
+            public ChargerState chargerState = ChargerState.CHARGER_STATE_UNSPECIFIED;
             public String updatedAt = "";
+
+            public enum ChargerConnectionStatus {
+                CHARGER_CONNECTION_UNSPECIFIED("Unspecified"),
+                CHARGER_CONNECTION_DISCONNECTED("Disconnected"),
+                CHARGER_CONNECTION_CONNECTED_WITHOUT_POWER("Connected (No Power)"),
+                CHARGER_CONNECTION_POWER_AVAILABLE_BUT_NOT_ACTIVATED("Power Not Activated"),
+                CHARGER_CONNECTION_CONNECTED_WITH_POWER("Connected"),
+                CHARGER_CONNECTION_INIT("Initializing"),
+                CHARGER_CONNECTION_FAULT("Fault");
+
+                private final String label;
+
+                ChargerConnectionStatus(String label) {
+                    this.label = label;
+                }
+
+                public String getLabel() {
+                    return label;
+                }
+
+                public static ChargerConnectionStatus fromString(String text) {
+                    for (ChargerConnectionStatus status : ChargerConnectionStatus.values()) {
+                        if (status.name().equals(text)) {
+                            return status;
+                        }
+                    }
+                    return CHARGER_CONNECTION_UNSPECIFIED;
+                }
+            }
+
+            public enum ChargerState {
+                CHARGER_STATE_UNSPECIFIED("Unspecified"),
+                CHARGER_STATE_IDLE("Idle"),
+                CHARGER_STATE_PRE_STRT("Pre-Start"),
+                CHARGER_STATE_CHARGN("Charging"),
+                CHARGER_STATE_ALRM("Alarm"),
+                CHARGER_STATE_SRV("Service"),
+                CHARGER_STATE_DIAG("Diagnostics"),
+                CHARGER_STATE_BOOT("Boot"),
+                CHARGER_STATE_RSTRT("Restart");
+
+                private final String label;
+
+                ChargerState(String label) {
+                    this.label = label;
+                }
+
+                public String getLabel() {
+                    return label;
+                }
+
+                public static ChargerState fromString(String text) {
+                    for (ChargerState state : ChargerState.values()) {
+                        if (state.name().equals(text)) {
+                            return state;
+                        }
+                    }
+                    return CHARGER_STATE_UNSPECIFIED;
+                }
+            }
         }
     }
 

@@ -114,12 +114,14 @@ public class LynkcoAPI {
             CombinedSigninResponse combinedSigninResponse = getCombinedSigninAndSignup(xMsCpimCsrfToken,
                     xMsCpimTransValue, pageViewId, codeChallenge);
             if (combinedSigninResponse == null) {
+                logger.warn("combinedSigninResponse is null!");
                 return null;
             }
 
             return new LoginResponse(xMsCpimTransValue, xMsCpimCsrfToken, combinedSigninResponse.pageViewId,
                     combinedSigninResponse.refererUrl, codeVerifier);
         } catch (Exception e) {
+            logger.warn("login caught exception: {}", e.toString());
             String message = e.getMessage();
             if (message == null) {
                 message = "No exception mesage";
@@ -130,6 +132,7 @@ public class LynkcoAPI {
 
     public TokenResponse handleMFACode(String verificationCode, LoginResponse mfaContext) throws LynkcoApiException {
         try {
+            logger.debug("handleMFACode: mfaContext: {}", mfaContext.toString());
             // Step 1: Post verification
             boolean verificationSuccess = postVerification(verificationCode, mfaContext.xMsCpimTransValue,
                     mfaContext.xMsCpimCsrfToken);
@@ -357,7 +360,6 @@ public class LynkcoAPI {
                     .header(HttpHeader.AUTHORIZATION, "Bearer " + token)
                     .header(HttpHeader.CONTENT_TYPE, "application/json")
                     .content(new StringContentProvider(data.toString()));
-
             ContentResponse response = request.send();
 
             if (response.getStatus() == 200) {
@@ -380,10 +382,10 @@ public class LynkcoAPI {
         }
 
         String token = tokenManager.getCccToken();
+        logger.debug("fetchData CCC token: {}", token);
         try {
             Request request = httpClient.newRequest(endpoint).method(HttpMethod.GET)
                     .header("Authorization", "Bearer " + token).header("Content-Type", "application/json");
-
             ContentResponse response = request.send();
 
             if (response.getStatus() == 200) {
@@ -437,8 +439,6 @@ public class LynkcoAPI {
                 .param("code_challenge", codeChallenge).param("code_challenge_method", "S256")
                 .param("redirect_uri", REDIRECT_URI).param("client_id", CLIENT_ID)
                 .header(HttpHeader.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-
-        // Send the request
         ContentResponse response = request.send();
 
         // Handle the response
@@ -467,8 +467,8 @@ public class LynkcoAPI {
         Request request = httpClient.newRequest(uri).method(HttpMethod.POST).header("x-csrf-token", xMsCpimCsrfToken)
                 .header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .content(new FormContentProvider(fields));
-
         ContentResponse response = request.send();
+
         if (response.getStatus() == 200) {
             logger.debug("POST request for login successful.");
             return true;
@@ -481,7 +481,6 @@ public class LynkcoAPI {
     private @Nullable CombinedSigninResponse getCombinedSigninAndSignup(String csrfToken, String txValue,
             String pageViewId, String codeChallenge)
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
-
         String url = LOGIN_B2C_URL + "api/CombinedSigninAndSignup/confirmed";
         String refererBaseUrl = LOGIN_B2C_URL + "v2.0/authorize";
 
@@ -501,8 +500,6 @@ public class LynkcoAPI {
                         + CLIENT_ID + "&x-client-DM=iPhone&return-client-request-id=true&haschrome=1")
                 .param("rememberMe", "false").param("csrf_token", csrfToken).param("tx", "StateProperties=" + txValue)
                 .param("p", "B2C_1A_signin_mfa").param("diags", gson.toJson(diags));
-
-        // Send the request
         ContentResponse response = request.send();
 
         if (response.getStatus() == 200) {
@@ -534,9 +531,8 @@ public class LynkcoAPI {
         fields.add("verificationCode", verificationCode);
         fields.add("request_type", "RESPONSE");
         request.content(new FormContentProvider(fields));
-
-        // Send the request
         ContentResponse response = request.send();
+
         if (response.getStatus() == 200) {
             return true;
         } else {
@@ -546,7 +542,6 @@ public class LynkcoAPI {
     }
 
     private String getRedirect(LoginResponse loginResponse) throws Exception {
-
         String url = LOGIN_B2C_URL + "api/SelfAsserted/confirmed";
 
         JsonObject diagsJson = new JsonObject();
@@ -599,7 +594,8 @@ public class LynkcoAPI {
             if (responseBody.contains("code=")) {
                 return getQueryParam(responseBody, "code");
             }
-            throw new Exception("Unexpected response content. Could not find redirect code.");
+            throw new LynkcoApiException("Unexpected response content. Could not find redirect code.",
+                    LynkcoApiException.ErrorType.MFA_INVALID);
         } else {
             logger.debug("GET redirect request failed with status code: {}", response.getStatus());
         }
@@ -609,7 +605,6 @@ public class LynkcoAPI {
 
     public TokenResponse getTokens(String code, String codeVerifier) throws Exception {
         String url = LOGIN_B2C_URL + "oauth2/v2.0/token";
-
         Fields fields = new Fields();
         fields.add("client_info", "1");
         fields.add("scope", SCOPE_BASE_URL + ".read " + SCOPE_BASE_URL + ".write openid profile offline_access");
@@ -624,7 +619,6 @@ public class LynkcoAPI {
                 .header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br").header("x-ms-pkeyauth+", "1.0")
                 .header("x-client-last-telemetry", "4|0|||").header("x-client-ver", "1.2.22")
                 .header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
-
         ContentResponse response = request.send();
 
         if (response.getStatus() == 200) {

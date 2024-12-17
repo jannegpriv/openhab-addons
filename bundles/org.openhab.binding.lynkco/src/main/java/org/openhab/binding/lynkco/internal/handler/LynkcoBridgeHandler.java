@@ -53,7 +53,6 @@ import com.google.gson.Gson;
  */
 @NonNullByDefault
 public class LynkcoBridgeHandler extends BaseBridgeHandler {
-
     private final Logger logger = LoggerFactory.getLogger(LynkcoBridgeHandler.class);
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Set.of(THING_TYPE_BRIDGE);
@@ -76,6 +75,11 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
+        logger.debug("initialize: this: {} waitingForMfa: {}", this, waitingForMfa);
+        if (pendingMfaResponse != null) {
+            logger.debug("initialize, pending MFS ...");
+            return;
+        }
         LynkcoBridgeConfiguration config = getConfigAs(LynkcoBridgeConfiguration.class);
 
         this.api = new LynkcoAPI(config, gson, httpClient, tokenManager);
@@ -91,6 +95,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
+        logger.debug("handleConfigurationUpdate: {}", configurationParameters.toString());
         if (configurationParameters.containsKey("mfa") && waitingForMfa) {
             String mfaCode = (String) configurationParameters.get("mfa");
 
@@ -98,11 +103,14 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
                 if (pendingMfaResponse != null) {
                     processMfaCode(mfaCode, pendingMfaResponse);
                 } else {
+                    logger.debug("handleConfigurationUpdate pendingMfaResponse is null");
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                             "Pending MFA response is not available.");
                 }
             }
+            logger.debug("handleConfigurationUpdate: MFA: {}", mfaCode);
         }
+        logger.debug("handleConfigurationUpdate: api: {} waitingForMfa: {}", api, waitingForMfa);
     }
 
     public Map<String, LynkcoDTO> getLynkcoThings() {
@@ -116,6 +124,11 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void dispose() {
+        logger.debug("dispose");
+        if (pendingMfaResponse != null) {
+            logger.debug("dispose, pending MFA ...");
+            return;
+        }
         api = null;
         waitingForMfa = false;
         pendingMfaResponse = null;
@@ -126,18 +139,17 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
     }
 
     private void initializeAuthentication() {
+        logger.debug("initializeAuthentication");
         try {
             if (api == null) {
                 return;
             }
-
             // First try to get a cached token
             try {
                 String token = tokenManager.getCccToken();
                 if (token != null) {
                     // If we get here, we have a valid token
                     logger.debug("Valid cached token found, starting normal operation");
-                    // startAutomaticRefresh();
                     return;
                 }
             } catch (LynkcoApiException e) {
@@ -148,6 +160,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
             // Start login process
             if (api != null) {
                 pendingMfaResponse = api.login();
+                logger.debug("initializeAuthentication pendingMfaResponse: {}", pendingMfaResponse);
                 handleMfaRequired();
             }
         } catch (LynkcoApiException e) {
@@ -156,22 +169,21 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
     }
 
     private void handleMfaRequired() {
+        logger.debug("handleMfaRequired");
         waitingForMfa = true;
-
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING,
                 "Please enter MFA code in configuration");
     }
 
     private void processMfaCode(String mfaCode, @Nullable LoginResponse mfaResponse) {
+        logger.debug("processMfaCode: response: {}", mfaResponse);
         try {
             if (api != null && mfaResponse != null) {
                 // Handle MFA and get tokens
                 TokenResponse tokenResponse = api.handleMFACode(mfaCode, mfaResponse);
-
                 if (tokenResponse.success) {
                     // Store tokens in TokenManager
                     tokenManager.updateTokens(tokenResponse.authToken, tokenResponse.refreshToken);
-
                     logger.debug("MFA verification successful");
 
                     // Clear MFA state

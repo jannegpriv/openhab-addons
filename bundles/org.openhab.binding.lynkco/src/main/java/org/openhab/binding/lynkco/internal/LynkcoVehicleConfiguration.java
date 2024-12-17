@@ -24,5 +24,5 @@ public class LynkcoVehicleConfiguration {
     public static final String DEVICE_ID_LABEL = "vin";
 
     public String vin = "";
-    public int refresh = 5;
+    public int refresh = 10;
 }
