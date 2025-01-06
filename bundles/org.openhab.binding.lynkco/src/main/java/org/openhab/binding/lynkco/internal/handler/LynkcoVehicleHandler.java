@@ -333,6 +333,19 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                             State state = getValue(groupId, channelId, dto);
                             logger.trace("Channel: {}, State: {}", channelUID, state);
                             updateState(channelUID, state);
+
+                            // Sync climate control channel with actual state
+                            if (PRECLIMATE_ACTIVE.equals(channelId) && groupId.equals(GROUP_CLIMATE)) {
+                                // Create the control channel UID
+                                ChannelUID controlChannelUID = new ChannelUID(getThing().getUID(),
+                                        GROUP_CLIMATE_CONTROL, CHANNEL_PRECLIMATE);
+
+                                // Check if the channel exists and is linked before updating
+                                Channel controlChannel = getThing().getChannel(controlChannelUID);
+                                if (controlChannel != null && isLinked(controlChannelUID)) {
+                                    updateState(controlChannelUID, state);
+                                }
+                            }
                         }
                     });
 
