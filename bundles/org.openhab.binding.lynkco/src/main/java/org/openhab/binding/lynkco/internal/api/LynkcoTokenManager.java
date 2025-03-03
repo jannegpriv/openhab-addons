@@ -137,6 +137,8 @@ public class LynkcoTokenManager {
             boolean isExpired = now > cachedTokenExpiration2;
             if (isExpired) {
                 logger.debug("CCC token has expired. Cached expiration: {}, Now: {}", cachedTokenExpiration2, now);
+            } else {
+                logger.trace("Cached expiration: {}, Now: {}", cachedTokenExpiration2, now);
             }
             return isExpired;
         }

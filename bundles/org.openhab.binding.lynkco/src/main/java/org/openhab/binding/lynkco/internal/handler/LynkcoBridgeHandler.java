@@ -150,6 +150,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
                 if (token != null) {
                     // If we get here, we have a valid token
                     logger.debug("Valid cached token found, starting normal operation");
+                    updateStatus(ThingStatus.ONLINE);
                     return;
                 }
             } catch (LynkcoApiException e) {
