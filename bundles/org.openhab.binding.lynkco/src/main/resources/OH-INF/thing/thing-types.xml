@@ -1,0 +1,932 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="lynkco"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<bridge-type id="api">
+		<label>@text/thing-type.lynkco.api.label</label>
+		<description>@text/thing-type.lynkco.api.description</description>
+
+		<properties>
+			<property name="vendor">LynkCo</property>
+		</properties>
+
+		<config-description>
+			<parameter name="email" type="text" required="true">
+				<label>@text/thing-type.config.lynkco.api.email.label</label>
+				<description>@text/thing-type.config.lynkco.api.email.description</description>
+			</parameter>
+			<parameter name="password" type="text" required="true">
+				<label>@text/thing-type.config.lynkco.api.password.label</label>
+				<context>password</context>
+				<description>@text/thing-type.config.lynkco.api.password.description</description>
+			</parameter>
+			<parameter name="redirect" type="text" required="false">
+				<label>@text/thing-type.config.lynkco.api.redirect.label</label>
+				<description>@text/thing-type.config.lynkco.api.redirect.description</description>
+			</parameter>
+		</config-description>
+	</bridge-type>
+
+	<thing-type id="vehicle">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="api"/>
+		</supported-bridge-type-refs>
+
+		<label>@text/thing-type.lynkco.vehicle.label</label>
+		<description>@text/thing-type.lynkco.vehicle.description</description>
+
+		<channel-groups>
+			<channel-group id="doors" typeId="doors"/>
+			<channel-group id="windows" typeId="windows"/>
+			<channel-group id="odometer" typeId="odometer"/>
+			<channel-group id="fuel" typeId="fuel"/>
+			<channel-group id="position" typeId="position"/>
+			<channel-group id="battery" typeId="battery"/>
+			<channel-group id="charging" typeId="charging"/>
+			<channel-group id="climate" typeId="climate"/>
+			<channel-group id="maintenance" typeId="maintenance"/>
+			<channel-group id="bulbs" typeId="bulbs"/>
+			<channel-group id="safety" typeId="safety"/>
+			<channel-group id="tyres" typeId="tyres"/>
+			<channel-group id="climate-control" typeId="climate-control"/>
+			<channel-group id="engine-control" typeId="engine-control"/>
+			<channel-group id="doors-control" typeId="doors-control"/>
+			<channel-group id="lights-control" typeId="lights-control"/>
+			<channel-group id="horn-control" typeId="horn-control"/>
+			<channel-group id="trip" typeId="trip"/>
+			<channel-group id="vehicle-status" typeId="vehicle-status"/>
+		</channel-groups>
+
+		<properties>
+			<property name="vendor">LynkCo</property>
+			<property name="thingTypeVersion">1</property>
+		</properties>
+
+		<representation-property>vin</representation-property>
+
+		<config-description>
+			<parameter name="vin" type="text" required="true">
+				<label>@text/thing-type.config.lynkco.vehicle.vin.label</label>
+				<description>@text/thing-type.config.lynkco.vehicle.vin.description</description>
+			</parameter>
+			<parameter name="refresh" type="integer" min="5" max="65535" unit="min">
+				<label>thing-type.config.lynkco.api.refresh.label</label>
+				<description>thing-type.config.lynkco.api.refresh.description</description>
+				<default>5</default>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<channel-group-type id="doors">
+		<label>Doors Status</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Door Status Last Update</label>
+			</channel>
+			<channel id="door-driver" typeId="door">
+				<label>Driver Door</label>
+			</channel>
+			<channel id="door-passenger" typeId="door">
+				<label>Passenger Door</label>
+			</channel>
+			<channel id="door-rear-left" typeId="door">
+				<label>Rear Left Door</label>
+			</channel>
+			<channel id="door-rear-right" typeId="door">
+				<label>Rear Right Door</label>
+			</channel>
+			<channel id="hood" typeId="door">
+				<label>Hood</label>
+			</channel>
+			<channel id="trunk" typeId="door">
+				<label>Trunk</label>
+			</channel>
+			<channel id="tank-flap" typeId="tank-flap"/>
+			<channel id="locks-status" typeId="lock"/>
+			<channel id="alarm-status" typeId="alarm"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="windows">
+		<label>Windows Status</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Window Status Last Update</label>
+			</channel>
+			<channel id="window-driver" typeId="window">
+				<label>Driver Window</label>
+			</channel>
+			<channel id="window-passenger" typeId="window">
+				<label>Passenger Window</label>
+			</channel>
+			<channel id="window-rear-left" typeId="window">
+				<label>Rear Left Window</label>
+			</channel>
+			<channel id="window-rear-right" typeId="window">
+				<label>Rear Right Window</label>
+			</channel>
+			<channel id="sunroof" typeId="window">
+				<label>Sunroof</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+
+	<channel-group-type id="odometer">
+		<label>Trip Meters</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Odometer Last Update</label>
+			</channel>
+			<channel id="odometer-km" typeId="odometer"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="fuel">
+		<label>Fuel Information</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Fuel Information Last Update</label>
+			</channel>
+			<channel id="level" typeId="fuel-level"/>
+			<channel id="level-status" typeId="fuel-level-status"/>
+			<channel id="type" typeId="fuel-type"/>
+			<channel id="range" typeId="distance">
+				<label>Fuel Range</label>
+				<description>Estimated driving range on remaining fuel</description>
+			</channel>
+			<channel id="consumption" typeId="fuel-consumption">
+				<label>Average Fuel Consumption</label>
+				<description>Average Fuel Consumption in l/100km</description>
+			</channel>
+			<channel id="consumption-last-trip" typeId="fuel-consumption">
+				<label>Average Fuel Consumption Last Trip</label>
+				<description>Average Fuel Consumption Last Trip in l/100km</description>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="position">
+		<label>Location Information</label>
+		<channels>
+			<channel id="location" typeId="location"/>
+			<channel id="location-trusted" typeId="trust-level"/>
+			<channel id="updated-at" typeId="timestamp">
+				<label>Position Last Update</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="battery">
+		<label>Battery Status</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Battery Last Update</label>
+			</channel>
+			<channel id="charge" typeId="charge-status"/>
+			<channel id="charge-level" typeId="battery-level">
+				<label>Charge Level</label>
+			</channel>
+			<channel id="energy-level" typeId="battery-level">
+				<label>Energy Level</label>
+			</channel>
+			<channel id="health" typeId="battery-level">
+				<label>Battery Health</label>
+			</channel>
+			<channel id="power-level" typeId="battery-level">
+				<label>Power Level</label>
+			</channel>
+			<channel id="voltage" typeId="voltage"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="charging">
+		<label>Charging Status</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Charging Last Update</label>
+			</channel>
+			<channel id="charging-level" typeId="battery-level"/>
+			<channel id="range" typeId="distance">
+				<label>Electric Range</label>
+				<description>Estimated driving range on battery power</description>
+			</channel>
+			<channel id="time-to-full" typeId="charging-time"/>
+			<channel id="charger-connection-status" typeId="charger-connection-status"/>
+			<channel id="charger-state" typeId="charger-state"/>
+			<channel id="power-mode" typeId="power-mode"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="climate">
+		<label>Climate Information</label>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Climate Last Update</label>
+			</channel>
+			<channel id="temp-exterior" typeId="temperature">
+				<label>Exterior Temperature</label>
+			</channel>
+			<channel id="temp-interior" typeId="temperature">
+				<label>Interior Temperature</label>
+			</channel>
+			<channel id="preclimate-active" typeId="switch">
+				<label>Preclimate Active</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="maintenance">
+		<label>Maintenance Status</label>
+		<description>Vehicle maintenance and fluid levels status</description>
+		<channels>
+			<channel id="brake-fluid" typeId="brake-fluid-level"/>
+			<channel id="coolant" typeId="coolant-level"/>
+			<channel id="engine-oil-level" typeId="engine-oil-level"/>
+			<channel id="engine-oil-pressure" typeId="engine-oil-pressure"/>
+			<channel id="service-warning" typeId="service-warning"/>
+			<channel id="washer-fluid" typeId="washer-fluid-level"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="bulbs">
+		<label>Light Bulb Status</label>
+		<description>Status of vehicle light bulbs</description>
+		<channels>
+			<channel id="updated" typeId="bulb-timestamp"/>
+			<channel id="daytime-running" typeId="daytime-running"/>
+			<channel id="fog-front" typeId="fog-front"/>
+			<channel id="fog-rear" typeId="fog-rear"/>
+			<channel id="high-beam" typeId="high-beam"/>
+			<channel id="high-beam-left" typeId="high-beam-left"/>
+			<channel id="high-beam-right" typeId="high-beam-right"/>
+			<channel id="turn-left" typeId="turn-left"/>
+			<channel id="low-beam" typeId="low-beam"/>
+			<channel id="low-beam-left" typeId="low-beam-left"/>
+			<channel id="low-beam-right" typeId="low-beam-right"/>
+			<channel id="position" typeId="position-lights"/>
+			<channel id="turn-right" typeId="turn-right"/>
+			<channel id="stop" typeId="stop-lights"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="safety">
+		<label>Vehicle Safety Systems</label>
+		<description>Status of vehicle safety systems</description>
+		<channels>
+			<channel id="airbag-updated" typeId="timestamp">
+				<label>Airbag Last Update</label>
+			</channel>
+			<channel id="airbag-status" typeId="airbag-status"/>
+			<channel id="seatbelt-updated" typeId="timestamp">
+				<label>Seatbelt Last Update</label>
+			</channel>
+			<channel id="seatbelt-driver" typeId="seatbelt">
+				<label>Driver Seatbelt</label>
+			</channel>
+			<channel id="seatbelt-passenger" typeId="seatbelt">
+				<label>Passenger Seatbelt</label>
+			</channel>
+			<channel id="seatbelt-rear-left" typeId="seatbelt">
+				<label>Rear Left Seatbelt</label>
+			</channel>
+			<channel id="seatbelt-rear-middle" typeId="seatbelt">
+				<label>Rear Middle Seatbelt</label>
+			</channel>
+			<channel id="seatbelt-rear-right" typeId="seatbelt">
+				<label>Rear Right Seatbelt</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="tyres">
+		<label>Tyre Status</label>
+		<description>Tyre pressure monitoring system status</description>
+		<channels>
+			<channel id="tyre-updated" typeId="timestamp">
+				<label>Tyre Last Update</label>
+			</channel>
+			<channel id="front-left" typeId="tyre-pressure">
+				<label>Front Left Tyre</label>
+			</channel>
+			<channel id="front-right" typeId="tyre-pressure">
+				<label>Front Right Tyre</label>
+			</channel>
+			<channel id="rear-left" typeId="tyre-pressure">
+				<label>Rear Left Tyre</label>
+			</channel>
+			<channel id="rear-right" typeId="tyre-pressure">
+				<label>Rear Right Tyre</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="trip">
+		<label>Trip Information</label>
+		<description>Current and last trip information</description>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Trip Last Update</label>
+			</channel>
+			<channel id="avg-speed" typeId="average-speed"/>
+			<channel id="last-trip-speed" typeId="last-trip-speed"/>
+			<channel id="trip-meter" typeId="odometer">
+				<label>Trip Meter</label>
+			</channel>
+			<channel id="trip-meter-2" typeId="odometer">
+				<label>Trip Meter 2</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="vehicle-status">
+		<label>Vehicle Status</label>
+		<description>Basic vehicle status information</description>
+		<channels>
+			<channel id="last-update" typeId="timestamp">
+				<label>Vehicle Last Update</label>
+			</channel>
+			<channel id="engine-status" typeId="engine-status"/>
+			<channel id="key-status" typeId="key-status"/>
+			<channel id="usage-mode" typeId="usage-mode"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="climate-control">
+		<label>Climate Control</label>
+		<description>Control vehicle climate functions</description>
+		<channels>
+			<channel id="preclimate" typeId="preclimate-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="engine-control">
+		<label>Engine Control</label>
+		<description>Control vehicle engine</description>
+		<channels>
+			<channel id="start" typeId="engine-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="doors-control">
+		<label>Door Control</label>
+		<description>Control vehicle doors</description>
+		<channels>
+			<channel id="lock" typeId="door-lock-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="lights-control">
+		<label>Light Control</label>
+		<description>Control vehicle lights</description>
+		<channels>
+			<channel id="flash" typeId="lights-flash-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="horn-control">
+		<label>Horn Control</label>
+		<description>Control vehicle horn and alerts</description>
+		<channels>
+			<channel id="honk" typeId="horn-control"/>
+			<channel id="honkflash" typeId="honk-flash-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-type id="switch">
+		<item-type>Switch</item-type>
+		<label>Switch</label>
+		<description>A switch that can be toggled</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="odometer">
+		<item-type>Number:Length</item-type>
+		<label>Odometer</label>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="distance">
+		<item-type>Number:Length</item-type>
+		<label>Distance</label>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="battery-level">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Level</label>
+		<category>Battery</category>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Voltage</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Temperature</label>
+		<category>Temperature</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="location">
+		<item-type>Location</item-type>
+		<label>Location</label>
+		<category>Location</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="fuel-consumption">
+		<item-type>Number</item-type>
+		<label>Fuel Consumption</label>
+		<description>Average fuel consumption in l/100km</description>
+		<category>Energy</category>
+		<state pattern="%.1f l/100km" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="fuel-level">
+		<item-type>Number:Volume</item-type>
+		<label>Fuel Level</label>
+		<category>Energy</category>
+		<state pattern="%.1f l" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="fuel-level-status">
+		<item-type>Number</item-type>
+		<label>Fuel Level Status</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="fuel-type">
+		<item-type>String</item-type>
+		<label>Fuel Type</label>
+		<category>Energy</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charger-connection-status">
+		<item-type>String</item-type>
+		<label>Charger Connection Status</label>
+		<description>Status of charger connection</description>
+		<category>Energy</category>
+		<state readOnly="true">
+			<options>
+				<option value="CHARGER_CONNECTION_UNSPECIFIED">Unspecified</option>
+				<option value="CHARGER_CONNECTION_DISCONNECTED">Disconnected</option>
+				<option value="CHARGER_CONNECTION_CONNECTED_WITHOUT_POWER">Connected (No Power)</option>
+				<option value="CHARGER_CONNECTION_POWER_AVAILABLE_BUT_NOT_ACTIVATED">Power Not Activated</option>
+				<option value="CHARGER_CONNECTION_CONNECTED_WITH_POWER">Connected</option>
+				<option value="CHARGER_CONNECTION_INIT">Initializing</option>
+				<option value="CHARGER_CONNECTION_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="charger-state">
+		<item-type>String</item-type>
+		<label>Charging State</label>
+		<description>Current charging state</description>
+		<category>Energy</category>
+		<state readOnly="true">
+			<options>
+				<option value="CHARGER_STATE_UNSPECIFIED">Unspecified</option>
+				<option value="CHARGER_STATE_IDLE">Idle</option>
+				<option value="CHARGER_STATE_PRE_STRT">Pre-Start</option>
+				<option value="CHARGER_STATE_CHARGN">Charging</option>
+				<option value="CHARGER_STATE_ALRM">Alarm</option>
+				<option value="CHARGER_STATE_SRV">Service</option>
+				<option value="CHARGER_STATE_DIAG">Diagnostics</option>
+				<option value="CHARGER_STATE_BOOT">Boot</option>
+				<option value="CHARGER_STATE_RSTRT">Restart</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="charging-time">
+		<item-type>Number:Time</item-type>
+		<label>Time to Full Charge</label>
+		<category>Time</category>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="trust-level">
+		<item-type>Switch</item-type>
+		<label>Location Trust Level</label>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="status">
+		<item-type>String</item-type>
+		<label>Current Status</label>
+		<description>Information on current status.</description>
+		<state readOnly="true" pattern="%s"/>
+	</channel-type>
+
+	<channel-type id="brake-fluid-level">
+		<item-type>String</item-type>
+		<label>Brake Fluid Level</label>
+		<description>Status of brake fluid level</description>
+		<category>Status</category>
+		<state readOnly="true">
+			<options>
+				<option value="BRAKE_FLUID_LEVEL_NORMAL">Normal</option>
+				<option value="BRAKE_FLUID_LEVEL_LOW">Low</option>
+				<option value="BRAKE_FLUID_LEVEL_VERY_LOW">Very Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="coolant-level">
+		<item-type>String</item-type>
+		<label>Coolant Level</label>
+		<description>Engine coolant level status</description>
+		<category>Status</category>
+		<state readOnly="true">
+			<options>
+				<option value="COOLANT_LEVEL_NORMAL">Normal</option>
+				<option value="COOLANT_LEVEL_LOW">Low</option>
+				<option value="COOLANT_LEVEL_VERY_LOW">Very Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="engine-oil-level">
+		<item-type>String</item-type>
+		<label>Engine Oil Level</label>
+		<description>Engine oil level status</description>
+		<category>Status</category>
+		<state readOnly="true">
+			<options>
+				<option value="ENGINE_OIL_LEVEL_STATUS_NORMAL">Normal</option>
+				<option value="ENGINE_OIL_LEVEL_STATUS_LOW">Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="engine-oil-pressure">
+		<item-type>String</item-type>
+		<label>Engine Oil Pressure</label>
+		<description>Engine oil pressure status</description>
+		<category>Status</category>
+		<state readOnly="true">
+			<options>
+				<option value="ENGINE_OIL_PRESSURE_STATUS_NORMAL">Normal</option>
+				<option value="ENGINE_OIL_PRESSURE_STATUS_LOW">Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="service-warning">
+		<item-type>String</item-type>
+		<label>Service Warning</label>
+		<description>Vehicle service warning status</description>
+		<category>Status</category>
+		<state readOnly="true">
+			<options>
+				<option value="SERVICE_WARNING_STATUS_NORMAL">No Warning</option>
+				<option value="SERVICE_WARNING_STATUS_WARNING">Service Required</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="washer-fluid-level">
+		<item-type>String</item-type>
+		<label>Washer Fluid Level</label>
+		<description>Windshield washer fluid level status</description>
+		<category>Window</category>
+		<state readOnly="true">
+			<options>
+				<option value="WASHER_FLUID_LEVEL_STATUS_NORMAL">Normal</option>
+				<option value="WASHER_FLUID_LEVEL_STATUS_LOW">Low</option>
+				<option value="WASHER_FLUID_LEVEL_STATUS_VERY_LOW">Very Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="timestamp">
+		<item-type>DateTime</item-type>
+		<label>Last Update</label>
+		<description>Timestamp of last status update</description>
+		<category>Time</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="daytime-running">
+		<item-type>String</item-type>
+		<label>Daytime Running Lights</label>
+		<description>Status of daytime running lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="fog-front">
+		<item-type>String</item-type>
+		<label>Front Fog Lights</label>
+		<description>Status of front fog lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="airbag-status">
+		<item-type>String</item-type>
+		<label>SRS Status</label>
+		<description>Status of the airbag system</description>
+		<state readOnly="true">
+			<options>
+				<option value="SRS_STATUS_NOT_DEPLOYED">Not Deployed</option>
+				<option value="SRS_STATUS_DEPLOYED">Deployed</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="seatbelt">
+		<item-type>Switch</item-type>
+		<label>Seatbelt</label>
+		<description>Seatbelt fastened status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="tyre-pressure">
+		<item-type>String</item-type>
+		<label>Tyre Pressure</label>
+		<description>Tyre pressure status</description>
+		<category>Pressure</category>
+		<state readOnly="true">
+			<options>
+				<option value="NO_WARNING">Normal</option>
+				<option value="WARNING">Low</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="door">
+		<item-type>Contact</item-type>
+		<label>Door</label>
+		<description>Door open/closed status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="window">
+		<item-type>Contact</item-type>
+		<label>Window</label>
+		<description>Window open/closed status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="lock">
+		<item-type>Switch</item-type>
+		<label>Lock</label>
+		<description>Lock status (locked/unlocked)</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="alarm">
+		<item-type>Switch</item-type>
+		<label>Alarm</label>
+		<description>Alarm system status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="tank-flap">
+		<item-type>Contact</item-type>
+		<label>Fuel Tank Flap</label>
+		<description>Fuel tank flap open/closed status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="fog-rear">
+		<item-type>String</item-type>
+		<label>Rear Fog Lights</label>
+		<description>Status of rear fog lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="high-beam">
+		<item-type>String</item-type>
+		<label>High Beam</label>
+		<description>Status of high beam lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="high-beam-left">
+		<item-type>String</item-type>
+		<label>Left High Beam</label>
+		<description>Status of left high beam light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="high-beam-right">
+		<item-type>String</item-type>
+		<label>Right High Beam</label>
+		<description>Status of right high beam light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="turn-left">
+		<item-type>String</item-type>
+		<label>Left Turn Signal</label>
+		<description>Status of left turn signal light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="turn-right">
+		<item-type>String</item-type>
+		<label>Right Turn Signal</label>
+		<description>Status of right turn signal light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="low-beam">
+		<item-type>String</item-type>
+		<label>Low Beam</label>
+		<description>Status of low beam lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="low-beam-left">
+		<item-type>String</item-type>
+		<label>Left Low Beam</label>
+		<description>Status of left low beam light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="low-beam-right">
+		<item-type>String</item-type>
+		<label>Right Low Beam</label>
+		<description>Status of right low beam light</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="position-lights">
+		<item-type>String</item-type>
+		<label>Position Lights</label>
+		<description>Status of position lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="stop-lights">
+		<item-type>String</item-type>
+		<label>Stop Lights</label>
+		<description>Status of stop/brake lights</description>
+		<category>Light</category>
+		<state readOnly="true">
+			<options>
+				<option value="BULB_STATUS_NO_FAULT">OK</option>
+				<option value="BULB_STATUS_FAULT">Fault</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="average-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Average Speed</label>
+		<description>Average speed during current trip</description>
+		<category>Speed</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="last-trip-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Last Trip Speed</label>
+		<description>Average speed during last driving cycle</description>
+		<category>Speed</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="engine-status">
+		<item-type>String</item-type>
+		<label>Engine Status</label>
+		<description>Current engine status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="key-status">
+		<item-type>String</item-type>
+		<label>Key Status</label>
+		<description>Vehicle key status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="usage-mode">
+		<item-type>String</item-type>
+		<label>Usage Mode</label>
+		<description>Current vehicle usage mode</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="preclimate-control">
+		<item-type>Switch</item-type>
+		<label>Pre-climatization Control</label>
+		<description>Controls the vehicle pre-climatization</description>
+	</channel-type>
+
+	<channel-type id="engine-control">
+		<item-type>Switch</item-type>
+		<label>Engine Control</label>
+		<description>Start/Stop the engine</description>
+	</channel-type>
+
+	<channel-type id="door-lock-control">
+		<item-type>Switch</item-type>
+		<label>Door Lock Control</label>
+		<description>Lock/Unlock the vehicle doors</description>
+	</channel-type>
+
+	<channel-type id="lights-flash-control">
+		<item-type>Switch</item-type>
+		<label>Flash Lights Control</label>
+		<description>Flash the vehicle lights</description>
+	</channel-type>
+
+	<channel-type id="horn-control">
+		<item-type>Switch</item-type>
+		<label>Horn Control</label>
+		<description>Sound the vehicle horn</description>
+	</channel-type>
+
+	<channel-type id="honk-flash-control">
+		<item-type>Switch</item-type>
+		<label>Horn and Flash Control</label>
+		<description>Sound horn and flash lights simultaneously</description>
+	</channel-type>
+
+
+
+</thing:thing-descriptions>
