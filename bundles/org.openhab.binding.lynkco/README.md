@@ -1,7 +1,7 @@
 # Lynk&Co Binding
 
 This binding integrates Lynk&Co vehicles into openHAB, providing both status information and control capabilities.
-It has been tested with the Lynk&Co 01 model.
+It has been tested with the Lynk&Co 01 model. It only works for the 01 model before the 2025 facelift.
 
 ## Prerequisites
 
