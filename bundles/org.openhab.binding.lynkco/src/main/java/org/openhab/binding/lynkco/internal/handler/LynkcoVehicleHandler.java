@@ -18,6 +18,7 @@ import static org.openhab.core.library.unit.SIUnits.*;
 
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -26,8 +27,9 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.lynkco.internal.LynkcoVehicleConfiguration;
-import org.openhab.binding.lynkco.internal.api.LynkcoAPI;
+import org.openhab.binding.lynkco.internal.Platform;
 import org.openhab.binding.lynkco.internal.api.LynkcoApiException;
+import org.openhab.binding.lynkco.internal.api.VehiclePlatform;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Battery;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Bvs;
@@ -79,6 +81,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(LynkcoVehicleHandler.class);
 
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
+    private Platform platform = Platform.GATEWAY;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
 
@@ -131,6 +134,42 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                     actionHonkBlink(true, true);
                 }
                 break;
+
+            case GROUP_CLIMATE_CONTROL + "#" + CHANNEL_VENTILATE:
+                if (command instanceof OnOffType) {
+                    actionVentilate(command == OnOffType.ON);
+                }
+                break;
+
+            case GROUP_CHARGING_CONTROL + "#" + CHANNEL_CHARGE_LIMIT:
+                if (command instanceof QuantityType<?> quantity) {
+                    actionChargeLimit(quantity.intValue());
+                } else if (command instanceof DecimalType decimal) {
+                    actionChargeLimit(decimal.intValue());
+                }
+                break;
+
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_DRIVER:
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_PASSENGER:
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_LEFT:
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_RIGHT:
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_STEERING_WHEEL:
+                if (command instanceof OnOffType) {
+                    actionHeater(channelUID.getIdWithoutGroup(), command == OnOffType.ON);
+                }
+                break;
+
+            case GROUP_SUNROOF_CONTROL + "#" + CHANNEL_SUNROOF:
+                if (command instanceof OnOffType) {
+                    actionSunroof(command == OnOffType.ON);
+                }
+                break;
+
+            case GROUP_GLOVEBOX_CONTROL + "#" + CHANNEL_GLOVEBOX_UNLOCK:
+                if (command == OnOffType.ON) {
+                    actionGloveboxUnlock();
+                }
+                break;
         }
         updateNow();
     }
@@ -149,6 +188,18 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             return;
         }
 
+        String platformProperty = thing.getProperties().get(PROPERTY_PLATFORM);
+        if (!config.platform.isBlank()) {
+            // Explicit user override takes precedence
+            platform = Platform.fromString(config.platform);
+        } else if (platformProperty != null) {
+            // Auto-detected platform from discovery
+            platform = Platform.fromString(platformProperty);
+        } else {
+            platform = Platform.GATEWAY;
+        }
+        logger.debug("Vehicle {} using platform {}", config.vin, platform);
+
         updateStatus(ThingStatus.UNKNOWN);
         startAutomaticRefresh();
     }
@@ -160,7 +211,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     public void actionClimate(boolean start, int climateLevel, int durationInMinutes) {
-        LynkcoAPI api = getLynkcoAPI();
+        VehiclePlatform api = getPlatform();
         if (api == null) {
             logger.debug("api is null");
             return;
@@ -177,7 +228,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     public void actionEngine(boolean start, int durationInMinutes) {
-        LynkcoAPI api = getLynkcoAPI();
+        VehiclePlatform api = getPlatform();
         if (api == null) {
             logger.debug("api is null");
             return;
@@ -194,7 +245,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     public void actionDoors(boolean lock) {
-        LynkcoAPI api = getLynkcoAPI();
+        VehiclePlatform api = getPlatform();
         if (api == null) {
             logger.debug("api is null");
             return;
@@ -211,7 +262,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     public void actionHonkBlink(boolean honk, boolean blink) {
-        LynkcoAPI api = getLynkcoAPI();
+        VehiclePlatform api = getPlatform();
         if (api == null) {
             logger.debug("api is null");
             return;
@@ -229,16 +280,114 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
     }
 
+    public void actionVentilate(boolean start) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            if (start) {
+                api.startVentilation(config.vin);
+            } else {
+                api.stopVentilation(config.vin);
+            }
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to control ventilation: {}", e.getMessage());
+        }
+    }
+
+    public void actionChargeLimit(int percent) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            api.setChargeLimit(config.vin, percent);
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to set charge limit: {}", e.getMessage());
+        }
+    }
+
+    public void actionHeater(String channelId, boolean on) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        String heaterName = heaterNameForChannel(channelId);
+        if (heaterName == null) {
+            logger.debug("Unknown heater channel {}", channelId);
+            return;
+        }
+        try {
+            List<String> heaters = List.of(heaterName);
+            if (on) {
+                api.startHeaters(config.vin, heaters);
+            } else {
+                api.stopHeaters(config.vin, heaters);
+            }
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to control heater: {}", e.getMessage());
+        }
+    }
+
+    public void actionSunroof(boolean open) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            if (open) {
+                api.openSunroof(config.vin);
+            } else {
+                api.closeSunroof(config.vin);
+            }
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to control sunroof: {}", e.getMessage());
+        }
+    }
+
+    public void actionGloveboxUnlock() {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            api.unlockGlovebox(config.vin);
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to unlock glovebox: {}", e.getMessage());
+        }
+    }
+
+    private @Nullable String heaterNameForChannel(String channelId) {
+        switch (channelId) {
+            case CHANNEL_HEATER_SEAT_DRIVER:
+                return HEATER_NAME_DRIVER_SEAT;
+            case CHANNEL_HEATER_SEAT_PASSENGER:
+                return HEATER_NAME_PASSENGER_SEAT;
+            case CHANNEL_HEATER_SEAT_REAR_LEFT:
+                return HEATER_NAME_REAR_LEFT_SEAT;
+            case CHANNEL_HEATER_SEAT_REAR_RIGHT:
+                return HEATER_NAME_REAR_RIGHT_SEAT;
+            case CHANNEL_HEATER_STEERING_WHEEL:
+                return HEATER_NAME_STEERING_WHEEL;
+            default:
+                return null;
+        }
+    }
+
     private void pollVehicleData() {
         try {
-            LynkcoAPI api = getLynkcoAPI();
+            VehiclePlatform api = getPlatform();
             if (api == null) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "Bridge is offline.");
                 return;
             }
-            LynkcoDTO vehicleData = new LynkcoDTO();
-            api.fetchVehicleRecordData(vehicleData, config.vin);
-            api.fetchVehicleShadowData(vehicleData, config.vin);
+            LynkcoDTO vehicleData = api.fetchVehicleData(config.vin);
             update(vehicleData);
         } catch (Exception e) {
             logger.debug("Error polling data for VIN {}", config.vin, e);
@@ -270,12 +419,12 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
     }
 
-    private @Nullable LynkcoAPI getLynkcoAPI() {
+    private @Nullable VehiclePlatform getPlatform() {
         Bridge bridge = getBridge();
         if (bridge != null) {
             LynkcoBridgeHandler handler = (LynkcoBridgeHandler) bridge.getHandler();
             if (handler != null) {
-                return handler.getLynkcoAPI();
+                return handler.getVehiclePlatform(platform);
             }
         }
         return null;

@@ -1,7 +1,17 @@
 # Lynk&Co Binding
 
 This binding integrates Lynk&Co vehicles into openHAB, providing both status information and control capabilities.
-It has been tested with the Lynk&Co 01 model.
+
+### Supported Models
+
+Lynk&Co uses two different backends and the binding supports both:
+
+- **Gateway** (modern signed mobile-app gateway) - used by Lynk&Co 01 (2025), 02 and 08. This is the default.
+- **CCC** (legacy `connectedcar.cloud`) - used by the pre-2025 Lynk&Co 01.
+
+The platform is normally auto-detected. If needed it can be overridden per vehicle with the `platform`
+configuration parameter (see below). Model 02 (BEV) has no fuel data, and some control features
+(for example the sunroof) are model dependent.
 
 ## Prerequisites
 
@@ -66,6 +76,7 @@ The vehicle thing requires:
 |-----------|------------------------------------------------------------------------|
 | vin       | Vehicle Identification Number (VIN) from your Lynk&Co app              |
 | refresh   | Refresh interval in minutes (default: 5, minimum: 5, maximum: 65535)   |
+| platform  | Optional backend override: `GATEWAY` (01 2025 / 02 / 08) or `CCC` (pre-2025 01). Leave empty for auto-detection. |
 
 **Important:** You must configure the VIN in the bridge thing for vehicle discovery to work.
 
@@ -299,6 +310,42 @@ Tyre pressure status options:
 |------------|--------|-----------------------------|
 | honk       | Switch | Sound horn                  |
 | honkflash  | Switch | Sound horn and flash lights |
+
+The following control groups are only available on the **Gateway** platform (Lynk&Co 01 (2025), 02, 08):
+
+#### Climate Control (`climate-control`) - additional channel
+
+| Channel ID | Type   | Description                  |
+|------------|--------|------------------------------|
+| ventilate  | Switch | Start/stop cabin ventilation |
+
+#### Charging Control (`charging-control`)
+
+| Channel ID   | Type                | Description                        |
+|--------------|---------------------|------------------------------------|
+| charge-limit | Number:Dimensionless| Target state-of-charge limit (%)   |
+
+#### Heater Control (`heaters-control`)
+
+| Channel ID    | Type   | Description                        |
+|---------------|--------|------------------------------------|
+| seat-driver   | Switch | Driver seat heater                 |
+| seat-passenger| Switch | Passenger seat heater              |
+| seat-rear-left| Switch | Rear left seat heater (08)         |
+| seat-rear-right| Switch| Rear right seat heater (08)        |
+| steering-wheel| Switch | Steering wheel heater              |
+
+#### Sunroof Control (`sunroof-control`)
+
+| Channel ID | Type   | Description                          |
+|------------|--------|--------------------------------------|
+| sunroof    | Switch | Open (ON) / close (OFF) the sunroof (not on model 02) |
+
+#### Glovebox Control (`glovebox-control`)
+
+| Channel ID | Type   | Description          |
+|------------|--------|----------------------|
+| unlock     | Switch | Unlock the glovebox  |
 
 ## Thing Actions
 

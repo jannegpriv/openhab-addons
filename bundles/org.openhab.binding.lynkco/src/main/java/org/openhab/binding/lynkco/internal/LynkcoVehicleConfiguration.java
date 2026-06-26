@@ -25,4 +25,9 @@ public class LynkcoVehicleConfiguration {
 
     public String vin = "";
     public int refresh = 10;
+    /**
+     * Optional backend platform override ("CCC" or "GATEWAY"). When empty the platform is taken
+     * from the auto-detected {@code platform} thing property, defaulting to the modern gateway.
+     */
+    public String platform = "";
 }

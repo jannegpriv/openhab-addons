@@ -33,6 +33,7 @@ public class LynkcoApiException extends Exception {
         TOKEN_EXPIRED,
         REFRESH_TOKEN_EXPIRED,
         API_ERROR,
+        UNSUPPORTED,
         UNKNOWN_ERROR
     }
 

@@ -55,6 +55,10 @@
 			<channel-group id="doors-control" typeId="doors-control"/>
 			<channel-group id="lights-control" typeId="lights-control"/>
 			<channel-group id="horn-control" typeId="horn-control"/>
+			<channel-group id="charging-control" typeId="charging-control"/>
+			<channel-group id="heaters-control" typeId="heaters-control"/>
+			<channel-group id="sunroof-control" typeId="sunroof-control"/>
+			<channel-group id="glovebox-control" typeId="glovebox-control"/>
 			<channel-group id="trip" typeId="trip"/>
 			<channel-group id="vehicle-status" typeId="vehicle-status"/>
 		</channel-groups>
@@ -75,6 +79,20 @@
 				<label>thing-type.config.lynkco.api.refresh.label</label>
 				<description>thing-type.config.lynkco.api.refresh.description</description>
 				<default>5</default>
+			</parameter>
+			<parameter name="platform" type="text" required="false">
+				<label>Backend Platform</label>
+				<description>Override the backend platform. Leave empty for auto-detection (defaults to the
+					modern gateway used by
+					Lynk&amp;Co 01 (2025), 02 and 08). Use CCC only for a pre-2025 Lynk&amp;Co
+					01.</description>
+				<limitToOptions>true</limitToOptions>
+				<options>
+					<option value="">Auto</option>
+					<option value="GATEWAY">Gateway (01 2025 / 02 / 08)</option>
+					<option value="CCC">CCC (pre-2025 01)</option>
+				</options>
+				<default></default>
 			</parameter>
 		</config-description>
 	</thing-type>
@@ -359,6 +377,7 @@
 		<description>Control vehicle climate functions</description>
 		<channels>
 			<channel id="preclimate" typeId="preclimate-control"/>
+			<channel id="ventilate" typeId="ventilate-control"/>
 		</channels>
 	</channel-group-type>
 
@@ -392,6 +411,52 @@
 		<channels>
 			<channel id="honk" typeId="horn-control"/>
 			<channel id="honkflash" typeId="honk-flash-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="charging-control">
+		<label>Charging Control</label>
+		<description>Control charging behaviour (gateway models only)</description>
+		<channels>
+			<channel id="charge-limit" typeId="charge-limit-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="heaters-control">
+		<label>Heater Control</label>
+		<description>Control seat and steering wheel heaters (gateway models only)</description>
+		<channels>
+			<channel id="seat-driver" typeId="heater-control">
+				<label>Driver Seat Heater</label>
+			</channel>
+			<channel id="seat-passenger" typeId="heater-control">
+				<label>Passenger Seat Heater</label>
+			</channel>
+			<channel id="seat-rear-left" typeId="heater-control">
+				<label>Rear Left Seat Heater</label>
+			</channel>
+			<channel id="seat-rear-right" typeId="heater-control">
+				<label>Rear Right Seat Heater</label>
+			</channel>
+			<channel id="steering-wheel" typeId="heater-control">
+				<label>Steering Wheel Heater</label>
+			</channel>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sunroof-control">
+		<label>Sunroof Control</label>
+		<description>Open/close the sunroof (gateway models with sunroof)</description>
+		<channels>
+			<channel id="sunroof" typeId="sunroof-control"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="glovebox-control">
+		<label>Glovebox Control</label>
+		<description>Unlock the glovebox (gateway models only)</description>
+		<channels>
+			<channel id="unlock" typeId="glovebox-unlock-control"/>
 		</channels>
 	</channel-group-type>
 
@@ -927,6 +992,36 @@
 		<description>Sound horn and flash lights simultaneously</description>
 	</channel-type>
 
+	<channel-type id="ventilate-control">
+		<item-type>Switch</item-type>
+		<label>Ventilation Control</label>
+		<description>Start/stop cabin ventilation</description>
+	</channel-type>
 
+	<channel-type id="charge-limit-control">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Charge Limit</label>
+		<description>Target state of charge limit in percent</description>
+		<category>Energy</category>
+		<state min="0" max="100" step="1" pattern="%d %%"/>
+	</channel-type>
+
+	<channel-type id="heater-control">
+		<item-type>Switch</item-type>
+		<label>Heater Control</label>
+		<description>Turn the heater on/off</description>
+	</channel-type>
+
+	<channel-type id="sunroof-control">
+		<item-type>Switch</item-type>
+		<label>Sunroof Control</label>
+		<description>Open (ON) or close (OFF) the sunroof</description>
+	</channel-type>
+
+	<channel-type id="glovebox-unlock-control">
+		<item-type>Switch</item-type>
+		<label>Glovebox Unlock</label>
+		<description>Unlock the glovebox</description>
+	</channel-type>
 
 </thing:thing-descriptions>

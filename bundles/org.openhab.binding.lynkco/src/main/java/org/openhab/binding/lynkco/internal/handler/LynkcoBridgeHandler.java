@@ -27,11 +27,15 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.lynkco.internal.LynkcoBridgeConfiguration;
+import org.openhab.binding.lynkco.internal.Platform;
+import org.openhab.binding.lynkco.internal.api.CccPlatform;
+import org.openhab.binding.lynkco.internal.api.GatewayPlatform;
 import org.openhab.binding.lynkco.internal.api.LynkcoAPI;
 import org.openhab.binding.lynkco.internal.api.LynkcoAPI.LoginResponse;
 import org.openhab.binding.lynkco.internal.api.LynkcoAPI.TokenResponse;
 import org.openhab.binding.lynkco.internal.api.LynkcoApiException;
 import org.openhab.binding.lynkco.internal.api.LynkcoTokenManager;
+import org.openhab.binding.lynkco.internal.api.VehiclePlatform;
 import org.openhab.binding.lynkco.internal.discovery.LynkcoDiscoveryService;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO;
 import org.openhab.core.config.core.Configuration;
@@ -66,6 +70,8 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
     private final Map<String, LynkcoDTO> lynkcoThings = new ConcurrentHashMap<>();
 
     private @Nullable LynkcoAPI api;
+    private @Nullable CccPlatform cccPlatform;
+    private @Nullable GatewayPlatform gatewayPlatform;
     private LynkcoTokenManager tokenManager;
     private @Nullable LoginResponse pendingLoginResponse;
 
@@ -126,11 +132,38 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
     public void dispose() {
         logger.debug("dispose");
         api = null;
+        cccPlatform = null;
+        gatewayPlatform = null;
         pendingLoginResponse = null;
     }
 
     public @Nullable LynkcoAPI getLynkcoAPI() {
         return api;
+    }
+
+    /**
+     * Returns the {@link VehiclePlatform} implementation for the given platform, creating and
+     * caching it on first use. Both implementations share the bridge's HTTP client and token
+     * manager.
+     *
+     * @param platform the backend platform to use
+     * @return the platform implementation
+     */
+    public VehiclePlatform getVehiclePlatform(Platform platform) {
+        if (platform == Platform.CCC) {
+            CccPlatform p = cccPlatform;
+            if (p == null) {
+                p = new CccPlatform(gson, httpClient, tokenManager);
+                cccPlatform = p;
+            }
+            return p;
+        }
+        GatewayPlatform p = gatewayPlatform;
+        if (p == null) {
+            p = new GatewayPlatform(gson, httpClient, tokenManager);
+            gatewayPlatform = p;
+        }
+        return p;
     }
 
     private void initializeAuthentication() {

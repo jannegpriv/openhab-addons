@@ -51,6 +51,7 @@ public class LynkcoTokenManager {
     private static final String PROPERTY_ACCESS_TOKEN = "accessToken";
     private static final String PROPERTY_REFRESH_TOKEN = "refreshToken";
     private static final String PROPERTY_USER_ID = "userId";
+    private static final String PROPERTY_DEVICE_UUID = "deviceUuid";
 
     private static final String TOKEN_URL = "https://login.lynkco.com/dc6c7c0c-5ba7-414a-a7d1-d62ca1f73d13/b2c_1a_signin_mfa/oauth2/v2.0/token";
 
@@ -60,6 +61,7 @@ public class LynkcoTokenManager {
     private @Nullable String cachedRefreshToken;
     private @Nullable String cachedUserId;
     private @Nullable Long cachedTokenExpiration;
+    private @Nullable Long cachedAccessTokenExpiration;
     private int refreshCount = 0;
 
     public LynkcoTokenManager(Thing thing, HttpClient httpClient) {
@@ -109,7 +111,7 @@ public class LynkcoTokenManager {
      */
     public boolean refreshTokens() {
         try {
-            refreshTokensInternal();
+            refreshOAuthTokens();
             return true;
         } catch (LynkcoApiException e) {
             logger.warn("Failed to refresh tokens: {}", e.getMessage());
@@ -134,6 +136,31 @@ public class LynkcoTokenManager {
                 cachedTokenExpiration = null;
             }
         }
+
+        if (cachedAccessToken != null) {
+            try {
+                JsonObject jsonPayload = decodeJwtClaims(cachedAccessToken);
+                cachedAccessTokenExpiration = jsonPayload.get("exp").getAsLong();
+                logger.debug("loadTokensFromProperties: cachedAccessTokenExpiration: {}", cachedAccessTokenExpiration);
+            } catch (Exception e) {
+                logger.debug("Could not decode cached access token expiration: {}", e.getMessage());
+                cachedAccessTokenExpiration = null;
+            }
+        }
+    }
+
+    /**
+     * Decode the claims (payload) of a JWT into a {@link JsonObject}.
+     *
+     * @param token a JWT
+     * @return the decoded claims object (empty object if the token is null/invalid)
+     */
+    private JsonObject decodeJwtClaims(@Nullable String token) {
+        String payload = decodeJwtToken(token);
+        if (payload.isEmpty()) {
+            return new JsonObject();
+        }
+        return JsonParser.parseString(payload).getAsJsonObject();
     }
 
     private String decodeJwtToken(@Nullable String token) {
@@ -179,13 +206,107 @@ public class LynkcoTokenManager {
                 return cachedCccToken;
             }
 
-            return refreshTokensInternal();
+            // Ensure OAuth tokens are fresh, then exchange the access token for a CCC token
+            String accessToken = refreshOAuthTokens();
+            String cccToken = sendDeviceLogin(accessToken);
+            if (cccToken != null) {
+                logger.debug("Refreshed CCC token");
+                updateToken(PROPERTY_CCC_TOKEN, cccToken);
+                loadTokensFromProperties();
+                return cccToken;
+            }
+            logger.error("New CCC token is null, please re-authenticate");
+            throw new LynkcoApiException("Token has expired, please re-authenticate",
+                    LynkcoApiException.ErrorType.AUTHENTICATION_REQUIRED);
         } finally {
             cccTokenLock.unlock();
         }
     }
 
-    private String refreshTokensInternal() throws LynkcoApiException {
+    /**
+     * Returns a valid OAuth access token for use with the modern signed gateway, refreshing
+     * the token set if the cached access token has expired.
+     *
+     * @return a valid access token, or null if it could not be obtained
+     */
+    public @Nullable String getAccessToken() throws LynkcoApiException {
+        try {
+            cccTokenLock.lock();
+
+            if (cachedAccessToken != null && !isAccessTokenExpired()) {
+                return cachedAccessToken;
+            }
+
+            return refreshOAuthTokens();
+        } finally {
+            cccTokenLock.unlock();
+        }
+    }
+
+    private boolean isAccessTokenExpired() {
+        Long exp = cachedAccessTokenExpiration;
+        if (exp == null) {
+            return true;
+        }
+        return Instant.now().getEpochSecond() > exp;
+    }
+
+    /**
+     * @return the {@code snowflakeId} claim from the access token, used both as the gateway
+     *         {@code X-CustomerId} header and as the secret for request signing
+     */
+    public @Nullable String getSnowflakeId() {
+        try {
+            JsonObject claims = decodeJwtClaims(cachedAccessToken);
+            if (claims.has("snowflakeId")) {
+                return claims.get("snowflakeId").getAsString();
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract snowflakeId from access token: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * @return the {@code customerNumber} claim from the access token, used as the gateway
+     *         {@code X-CustomerNumber} header
+     */
+    public @Nullable String getCustomerNumber() {
+        try {
+            JsonObject claims = decodeJwtClaims(cachedAccessToken);
+            if (claims.has("customerNumber")) {
+                return claims.get("customerNumber").getAsString();
+            }
+        } catch (Exception e) {
+            logger.debug("Could not extract customerNumber from access token: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Returns a stable device UUID for this bridge, used as the gateway {@code X-DeviceId} header
+     * and for device login. Generated once and persisted as a thing property.
+     *
+     * @return the device UUID
+     */
+    public String getDeviceUuid() {
+        String deviceUuid = thing.getProperties().get(PROPERTY_DEVICE_UUID);
+        if (deviceUuid == null || deviceUuid.isEmpty()) {
+            deviceUuid = UUID.randomUUID().toString();
+            thing.setProperty(PROPERTY_DEVICE_UUID, deviceUuid);
+        }
+        return deviceUuid;
+    }
+
+    /**
+     * Refresh the OAuth access and refresh tokens using the stored refresh token. This is shared
+     * by both platforms; the CCC-specific {@code cccToken} is obtained separately (see
+     * {@link #getCccToken()}) so that gateway-only vehicles are not affected if the legacy CCC
+     * device-login is unavailable.
+     *
+     * @return the new access token
+     */
+    private String refreshOAuthTokens() throws LynkcoApiException {
         String refreshToken = cachedRefreshToken != null ? cachedRefreshToken
                 : thing.getProperties().get(PROPERTY_REFRESH_TOKEN);
 
@@ -222,18 +343,8 @@ public class LynkcoTokenManager {
                 if (accessToken != null) {
                     logger.debug("Refreshed access token");
                     updateToken(PROPERTY_ACCESS_TOKEN, accessToken);
-
-                    String cccToken = sendDeviceLogin(accessToken);
-                    if (cccToken != null) {
-                        logger.debug("Refreshed CCC token");
-                        updateToken(PROPERTY_CCC_TOKEN, cccToken);
-                        loadTokensFromProperties();
-                        return cccToken;
-                    } else {
-                        logger.error("New CCC token is null, please re-authenticate");
-                        throw new LynkcoApiException("Token has expired, please re-authenticate",
-                                LynkcoApiException.ErrorType.AUTHENTICATION_REQUIRED);
-                    }
+                    loadTokensFromProperties();
+                    return accessToken;
                 } else {
                     logger.error("Access token is null");
                     throw new LynkcoApiException("Failed to obtain access token",
@@ -357,5 +468,6 @@ public class LynkcoTokenManager {
         cachedAccessToken = null;
         cachedRefreshToken = null;
         cachedTokenExpiration = null;
+        cachedAccessTokenExpiration = null;
     }
 }

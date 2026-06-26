@@ -31,6 +31,28 @@ public class LynkcoBindingConstants {
     public static final ThingTypeUID THING_TYPE_VEHICLE = new ThingTypeUID(BINDING_ID, "vehicle");
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "api");
 
+    // Modern mobile-app gateway (used by Lynk&Co 01 (2025), 02 and 08)
+    public static final String GATEWAY_API_BASE = "https://agw.mobile-app.lynkco.biz";
+    public static final String GATEWAY_LOVE_BASE = GATEWAY_API_BASE + "/mobile-app/love/v1";
+    public static final String GATEWAY_COMMAND_BASE = GATEWAY_API_BASE + "/mobile-app/love-remote-command/v1";
+    public static final String GATEWAY_IAM_BASE = GATEWAY_API_BASE + "/mobile-app/iamservice/v1";
+    public static final String GATEWAY_SIGNATURE_VERSION = "v2";
+
+    // App identification headers sent to the gateway (mirrors the official Android app)
+    public static final String GATEWAY_USER_AGENT = "Android";
+    public static final String GATEWAY_APP_NAME = "Lynk&Co";
+    public static final String GATEWAY_APP_VERSION = "2.55.0";
+    public static final String GATEWAY_APP_BUILD_NUMBER = "8284";
+    public static final String GATEWAY_DEVICE_OS_VERSION = "14";
+    public static final String GATEWAY_DEVICE_MODEL = "Pixel 8";
+    public static final String GATEWAY_DEVICE_LANGUAGE = "en";
+
+    // Thing property keys for the auto-detected vehicle platform/model
+    public static final String PROPERTY_MODEL = "model";
+    public static final String PROPERTY_PLATFORM = "platform";
+    public static final String PROPERTY_PROPULSION = "propulsion";
+    public static final String PROPERTY_DEVICE_UUID = "deviceUuid";
+
     // List of Channel groups
     public static final String GROUP_DOORS = "doors";
     public static final String GROUP_WINDOWS = "windows";
@@ -184,6 +206,32 @@ public class LynkcoBindingConstants {
     // Horn Control Channels
     public static final String CHANNEL_HORN = "honk";
     public static final String CHANNEL_HONK_FLASH = "honkflash";
+
+    // Gateway-only control groups/channels (Lynk&Co 01 (2025), 02, 08)
+    public static final String GROUP_CHARGING_CONTROL = "charging-control";
+    public static final String CHANNEL_CHARGE_LIMIT = "charge-limit";
+
+    public static final String GROUP_HEATERS_CONTROL = "heaters-control";
+    public static final String CHANNEL_HEATER_SEAT_DRIVER = "seat-driver";
+    public static final String CHANNEL_HEATER_SEAT_PASSENGER = "seat-passenger";
+    public static final String CHANNEL_HEATER_SEAT_REAR_LEFT = "seat-rear-left";
+    public static final String CHANNEL_HEATER_SEAT_REAR_RIGHT = "seat-rear-right";
+    public static final String CHANNEL_HEATER_STEERING_WHEEL = "steering-wheel";
+
+    // Gateway heater item names (start_heaters/stop_heaters payload values)
+    public static final String HEATER_NAME_DRIVER_SEAT = "DRIVER_SEAT";
+    public static final String HEATER_NAME_PASSENGER_SEAT = "PASSENGER_SEAT";
+    public static final String HEATER_NAME_REAR_LEFT_SEAT = "REAR_LEFT_SEAT";
+    public static final String HEATER_NAME_REAR_RIGHT_SEAT = "REAR_RIGHT_SEAT";
+    public static final String HEATER_NAME_STEERING_WHEEL = "STEERING_WHEEL";
+
+    public static final String CHANNEL_VENTILATE = "ventilate";
+
+    public static final String GROUP_SUNROOF_CONTROL = "sunroof-control";
+    public static final String CHANNEL_SUNROOF = "sunroof";
+
+    public static final String GROUP_GLOVEBOX_CONTROL = "glovebox-control";
+    public static final String CHANNEL_GLOVEBOX_UNLOCK = "unlock";
 
     // Misc
     public static final String CHANNEL_STATUS = "status";
