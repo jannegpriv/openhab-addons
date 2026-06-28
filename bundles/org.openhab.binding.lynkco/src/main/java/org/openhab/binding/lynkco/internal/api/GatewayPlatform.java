@@ -94,6 +94,22 @@ public class GatewayPlatform implements VehiclePlatform {
         return mapToLynkcoDTO(summary, metadata, location, charge, climate, doors, fuel);
     }
 
+    @Override
+    public java.util.Map<String, String> listVehicles() throws LynkcoApiException {
+        ensureDeviceRegistered();
+        java.util.Map<String, String> result = new java.util.LinkedHashMap<>();
+        GatewayDTO.VehicleList list = gson.fromJson(getJson(GATEWAY_LOVE_BASE + "/list/vehicles"),
+                GatewayDTO.VehicleList.class);
+        if (list != null && list.listOfVehicles != null) {
+            for (GatewayDTO.VehicleListEntry entry : list.listOfVehicles) {
+                if (entry.vehicle != null && !entry.vehicle.vin.isEmpty()) {
+                    result.put(entry.vehicle.vin, entry.vehicle.model);
+                }
+            }
+        }
+        return result;
+    }
+
     private <T> @Nullable T getDto(String url, Class<T> clazz) {
         try {
             return gson.fromJson(getJson(url), clazz);

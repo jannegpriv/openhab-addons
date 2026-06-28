@@ -13,6 +13,7 @@
 package org.openhab.binding.lynkco.internal.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO;
@@ -38,6 +39,15 @@ public interface VehiclePlatform {
      * @return a populated {@link LynkcoDTO}
      */
     LynkcoDTO fetchVehicleData(String vin) throws LynkcoApiException;
+
+    /**
+     * List the vehicles available on the account for discovery.
+     *
+     * @return a map of VIN to model code; empty if the platform does not support listing
+     */
+    default Map<String, String> listVehicles() throws LynkcoApiException {
+        return Map.of();
+    }
 
     // --- Climate / engine -------------------------------------------------------------------
 

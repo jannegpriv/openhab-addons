@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.lynkco.internal.dto;
 
+import java.util.List;
+
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
@@ -22,6 +24,21 @@ import org.eclipse.jdt.annotation.Nullable;
  * @author Jan Gustafsson - Initial contribution
  */
 public class GatewayDTO {
+
+    /** {@code /list/vehicles} */
+    public static class VehicleList {
+        public @Nullable List<VehicleListEntry> listOfVehicles;
+    }
+
+    public static class VehicleListEntry {
+        public @Nullable VehicleListVehicle vehicle;
+        public String role = "";
+    }
+
+    public static class VehicleListVehicle {
+        public String vin = "";
+        public String model = "";
+    }
 
     /** {@code /vehicle/{vin}/vehicle_data} */
     public static class VehicleData {
