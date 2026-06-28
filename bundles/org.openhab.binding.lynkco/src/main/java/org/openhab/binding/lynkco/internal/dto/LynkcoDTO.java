@@ -24,6 +24,9 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 public class LynkcoDTO {
     public RecordDTO record = new RecordDTO();
     public ShadowDTO shadow = new ShadowDTO();
+    // Detected model code (e.g. "DX11") and propulsion ("PHEV"/"BEV"); populated by the gateway.
+    public String model = "";
+    public String propulsion = "";
 
     public static class RecordDTO {
         public Battery battery = new Battery();
@@ -76,6 +79,7 @@ public class LynkcoDTO {
         public double chargeLevel;
         public int distanceToEmptyOnBatteryOnly;
         public int timeToFullyCharged;
+        public int chargeLimit = -1;
         public String vehicleUpdatedAt = "";
     }
 

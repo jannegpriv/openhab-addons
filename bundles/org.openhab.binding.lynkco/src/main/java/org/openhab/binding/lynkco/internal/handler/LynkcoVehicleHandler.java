@@ -17,6 +17,7 @@ import static org.openhab.core.library.unit.MetricPrefix.KILO;
 import static org.openhab.core.library.unit.SIUnits.*;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.lynkco.internal.LynkcoModel;
 import org.openhab.binding.lynkco.internal.LynkcoVehicleConfiguration;
 import org.openhab.binding.lynkco.internal.Platform;
 import org.openhab.binding.lynkco.internal.api.LynkcoApiException;
@@ -62,6 +64,7 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.builder.ThingBuilder;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
@@ -82,6 +85,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
 
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
     private Platform platform = Platform.GATEWAY;
+    private boolean channelsAdjusted = false;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
 
@@ -188,6 +192,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             return;
         }
 
+        channelsAdjusted = false;
         String platformProperty = thing.getProperties().get(PROPERTY_PLATFORM);
         if (!config.platform.isBlank()) {
             // Explicit user override takes precedence
@@ -447,6 +452,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return getBatteryStatusValue(channelId, dto.record.battery);
             case GROUP_CHARGING:
                 return getChargingValue(channelId, dto.record.electricStatus, dto.shadow.evs);
+            case GROUP_CHARGING_CONTROL:
+                return getChargingControlValue(channelId, dto.record.electricStatus);
             case GROUP_CLIMATE:
                 return getClimateValue(channelId, dto.record.climate);
             case GROUP_CLIMATE_CONTROL:
@@ -473,6 +480,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
 
     private void update(@Nullable LynkcoDTO dto) {
         if (dto != null) {
+            adjustChannelsForModel(dto);
             getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                     .forEach(channelUID -> {
                         String groupId = channelUID.getGroupId();
@@ -649,6 +657,63 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case POWER_MODE:
                 return new StringType(evs.powermodeStatus);
 
+        }
+        return UnDefType.UNDEF;
+    }
+
+    /**
+     * Remove channels that do not apply to the detected model/propulsion and persist the model and
+     * propulsion as thing properties. Runs once per handler lifetime; a no-op for the CCC platform
+     * (model unknown) and when nothing needs removing.
+     */
+    private void adjustChannelsForModel(LynkcoDTO dto) {
+        if (channelsAdjusted || dto.model.isEmpty()) {
+            return;
+        }
+        channelsAdjusted = true;
+
+        LynkcoModel model = LynkcoModel.fromCode(dto.model);
+        boolean bev = "BEV".equalsIgnoreCase(dto.propulsion);
+
+        Map<String, String> props = new HashMap<>(thing.getProperties());
+        props.put(PROPERTY_MODEL, model.getDisplayName());
+        props.put(PROPERTY_PROPULSION, dto.propulsion);
+        updateProperties(props);
+
+        List<ChannelUID> toRemove = new ArrayList<>();
+        for (Channel channel : getThing().getChannels()) {
+            String group = channel.getUID().getGroupId();
+            String id = channel.getUID().getIdWithoutGroup();
+            boolean drop = false;
+            if (bev && (GROUP_FUEL.equals(group) || GROUP_ENGINE_CONTROL.equals(group))) {
+                drop = true; // BEV (e.g. 02) has no combustion engine or fuel tank
+            }
+            if (model == LynkcoModel.LYNKCO_02
+                    && (GROUP_SUNROOF_CONTROL.equals(group) || (GROUP_WINDOWS.equals(group) && SUNROOF.equals(id)))) {
+                drop = true; // model 02 has no sunroof
+            }
+            if (model != LynkcoModel.LYNKCO_08 && GROUP_HEATERS_CONTROL.equals(group)
+                    && (CHANNEL_HEATER_SEAT_REAR_LEFT.equals(id) || CHANNEL_HEATER_SEAT_REAR_RIGHT.equals(id))) {
+                drop = true; // rear-seat heaters only on the 08
+            }
+            if (drop) {
+                toRemove.add(channel.getUID());
+            }
+        }
+
+        if (!toRemove.isEmpty()) {
+            ThingBuilder builder = editThing();
+            toRemove.forEach(builder::withoutChannel);
+            updateThing(builder.build());
+            logger.debug("Removed {} channels not applicable to {} ({})", toRemove.size(), model.getDisplayName(),
+                    dto.propulsion);
+        }
+    }
+
+    private State getChargingControlValue(String channelId, ElectricStatus electricStatus) {
+        if (CHANNEL_CHARGE_LIMIT.equals(channelId)) {
+            return electricStatus.chargeLimit >= 0 ? new QuantityType<>(electricStatus.chargeLimit, Units.PERCENT)
+                    : UnDefType.UNDEF;
         }
         return UnDefType.UNDEF;
     }

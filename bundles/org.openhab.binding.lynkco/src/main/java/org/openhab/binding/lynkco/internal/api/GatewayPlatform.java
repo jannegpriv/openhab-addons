@@ -194,6 +194,9 @@ public class GatewayPlatform implements VehiclePlatform {
             dto.shadow.evs.chargerStatusData.chargerConnectionStatus = connected
                     ? ChargerConnectionStatus.CHARGER_CONNECTION_CONNECTED_WITH_POWER
                     : ChargerConnectionStatus.CHARGER_CONNECTION_DISCONNECTED;
+            if (bs.chargeLimit != null) {
+                dto.record.electricStatus.chargeLimit = bs.chargeLimit.value;
+            }
         }
 
         if (fuel != null && fuel.fuelState != null) {
@@ -228,6 +231,8 @@ public class GatewayPlatform implements VehiclePlatform {
 
         if (metadata != null && metadata.vehicle != null) {
             dto.record.odometer.odometerKm = metadata.vehicle.odometer;
+            dto.model = metadata.vehicle.model;
+            dto.propulsion = metadata.vehicle.propulsionType;
         }
 
         return dto;
