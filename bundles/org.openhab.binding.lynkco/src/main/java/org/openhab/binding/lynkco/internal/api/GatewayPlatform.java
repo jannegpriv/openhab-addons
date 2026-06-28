@@ -56,10 +56,17 @@ import com.google.gson.JsonArray;
 @NonNullByDefault
 public class GatewayPlatform implements VehiclePlatform {
 
+    // Base URLs whose prefix is stripped when computing the signature path (the server signs the
+    // path relative to these bases). Other URLs (e.g. iamservice) are signed with their full path.
+    private static final String[] SIGNATURE_BASES = { GATEWAY_LOVE_BASE + "/", GATEWAY_COMMAND_BASE + "/" };
+
     private final Logger logger = LoggerFactory.getLogger(GatewayPlatform.class);
     private final Gson gson;
     private final HttpClient httpClient;
     private final LynkcoTokenManager tokenManager;
+
+    // The access token for which the device session was last validated; re-validated on token change.
+    private @Nullable String registeredToken;
 
     public GatewayPlatform(Gson gson, HttpClient httpClient, LynkcoTokenManager tokenManager) {
         this.gson = gson;
@@ -212,6 +219,7 @@ public class GatewayPlatform implements VehiclePlatform {
     }
 
     private void postCommand(String vin, String command, String body) throws LynkcoApiException {
+        ensureDeviceRegistered();
         String url = GATEWAY_COMMAND_BASE + "/vehicle/" + vin + "/command/" + command;
         try {
             Request request = signedRequest(HttpMethod.POST, url, body);
@@ -240,6 +248,11 @@ public class GatewayPlatform implements VehiclePlatform {
      * {@code log:set TRACE org.openhab.binding.lynkco} on the karaf console.
      */
     private void logDiagnosticEndpoints(String vin) {
+        try {
+            ensureDeviceRegistered();
+        } catch (LynkcoApiException e) {
+            logger.trace("Gateway diagnostic device validation failed: {}", e.getMessage());
+        }
         for (String template : DIAGNOSTIC_ENDPOINTS) {
             String path = template.contains("%s") ? String.format(template, vin) : template;
             String url = GATEWAY_LOVE_BASE + path;
@@ -255,6 +268,7 @@ public class GatewayPlatform implements VehiclePlatform {
     }
 
     private String getJson(String url) throws LynkcoApiException {
+        ensureDeviceRegistered();
         try {
             Request request = signedRequest(HttpMethod.GET, url, null);
             ContentResponse response = request.send();
@@ -295,15 +309,18 @@ public class GatewayPlatform implements VehiclePlatform {
         }
 
         String nonce = UUID.randomUUID().toString();
-        String path = URI.create(url).getRawPath();
+        String path = signaturePath(url);
         String signature = sha256Hex(snowflakeId + nonce + path);
 
-        Request request = httpClient.newRequest(url).method(method)
+        // Clear cookies accumulated during the B2C login flow; otherwise Jetty attaches them as a
+        // Cookie header that the gateway rejects with "HTTP 400 invalid header".
+        httpClient.getCookieStore().removeAll();
+
+        Request request = httpClient.newRequest(url).method(method).agent(GATEWAY_USER_AGENT)
                 .header(HttpHeader.AUTHORIZATION, "Bearer " + accessToken).header("X-Auth-Token", accessToken)
                 .header("X-DeviceId", tokenManager.getDeviceUuid())
                 .header("X-CustomerNumber", customerNumber != null ? customerNumber : "")
-                .header("X-CustomerId", snowflakeId).header(HttpHeader.USER_AGENT, GATEWAY_USER_AGENT)
-                .header("api-version", "1").header("X-NONCE", nonce)
+                .header("X-CustomerId", snowflakeId).header("api-version", "1").header("X-NONCE", nonce)
                 .header("X-SIGNATURE-VERSION", GATEWAY_SIGNATURE_VERSION).header("X-SIGNATURE", signature)
                 .header("X-App-Name", GATEWAY_APP_NAME).header("X-App-Version", GATEWAY_APP_VERSION)
                 .header("X-App-Build-Number", GATEWAY_APP_BUILD_NUMBER)
@@ -314,6 +331,53 @@ public class GatewayPlatform implements VehiclePlatform {
             request.content(new StringContentProvider(body));
         }
         return request;
+    }
+
+    /**
+     * Compute the path used for signing: relative to a known signature base URL when applicable
+     * (e.g. {@code /vehicle/{vin}/vehicle_data}), otherwise the full URL path.
+     */
+    private String signaturePath(String url) {
+        for (String base : SIGNATURE_BASES) {
+            if (url.startsWith(base)) {
+                return "/" + url.substring(base.length()).replaceFirst("^/+", "");
+            }
+        }
+        return URI.create(url).getRawPath();
+    }
+
+    /**
+     * Register/validate the device session for the current access token. The gateway rejects data
+     * and command calls with HTTP 403 until the device has been validated via the IAM service. This
+     * is a no-op once validated for the current token, and re-runs after a token refresh.
+     */
+    private void ensureDeviceRegistered() throws LynkcoApiException {
+        String accessToken = tokenManager.getAccessToken();
+        if (accessToken == null) {
+            throw new LynkcoApiException("Missing access token for gateway request",
+                    LynkcoApiException.ErrorType.AUTHENTICATION_REQUIRED);
+        }
+        if (accessToken.equals(registeredToken)) {
+            return;
+        }
+        String body = "{\"deviceUuid\":\"" + tokenManager.getDeviceUuid() + "\",\"isLogin\":true}";
+        try {
+            Request request = signedRequest(HttpMethod.POST, GATEWAY_IAM_BASE + "/validate-session", body);
+            ContentResponse response = request.send();
+            if (response.getStatus() == 200) {
+                registeredToken = accessToken;
+                logger.debug("Gateway device session validated");
+            } else {
+                throw new LynkcoApiException("Device session validation failed: " + response.getStatus(),
+                        response.getStatus() == 401 ? LynkcoApiException.ErrorType.AUTHENTICATION_REQUIRED
+                                : LynkcoApiException.ErrorType.API_ERROR);
+            }
+        } catch (LynkcoApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new LynkcoApiException("Network error during device validation: " + e.getMessage(),
+                    LynkcoApiException.ErrorType.NETWORK_ERROR);
+        }
     }
 
     private String sha256Hex(String input) throws LynkcoApiException {
