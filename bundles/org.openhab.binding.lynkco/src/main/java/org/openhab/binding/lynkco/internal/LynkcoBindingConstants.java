@@ -219,11 +219,11 @@ public class LynkcoBindingConstants {
     public static final String CHANNEL_HEATER_STEERING_WHEEL = "steering-wheel";
 
     // Gateway heater item names (start_heaters/stop_heaters payload values)
-    public static final String HEATER_NAME_DRIVER_SEAT = "DRIVER_SEAT";
-    public static final String HEATER_NAME_PASSENGER_SEAT = "PASSENGER_SEAT";
-    public static final String HEATER_NAME_REAR_LEFT_SEAT = "REAR_LEFT_SEAT";
-    public static final String HEATER_NAME_REAR_RIGHT_SEAT = "REAR_RIGHT_SEAT";
-    public static final String HEATER_NAME_STEERING_WHEEL = "STEERING_WHEEL";
+    public static final String HEATER_NAME_DRIVER_SEAT = "front_left_seat";
+    public static final String HEATER_NAME_PASSENGER_SEAT = "front_right_seat";
+    public static final String HEATER_NAME_REAR_LEFT_SEAT = "rear_left_seat";
+    public static final String HEATER_NAME_REAR_RIGHT_SEAT = "rear_right_seat";
+    public static final String HEATER_NAME_STEERING_WHEEL = "steering_wheel";
 
     public static final String CHANNEL_VENTILATE = "ventilate";
 

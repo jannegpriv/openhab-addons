@@ -261,25 +261,24 @@ public class GatewayPlatform implements VehiclePlatform {
 
     @Override
     public void startClimate(String vin, int climateLevel, int durationInMinutes) throws LynkcoApiException {
-        // The gateway uses auto_conditioning_start; climateLevel maps to the heat level.
-        // TODO confirm the exact request body/params against captured app traffic.
-        String body = "{\"level\":" + climateLevel + ",\"durationInMinutes\":" + durationInMinutes + "}";
-        postCommand(vin, "auto_conditioning_start", body);
+        // Gateway auto_conditioning_start uses query params: temp (target °C) and optional level.
+        // The gateway has no duration parameter; default the target temperature to 22 °C.
+        postCommand(vin, "auto_conditioning_start?temp=22&level=" + climateLevel, null);
     }
 
     @Override
     public void stopClimate(String vin) throws LynkcoApiException {
-        postCommand(vin, "auto_conditioning_stop", "{}");
+        postCommand(vin, "auto_conditioning_stop", null);
     }
 
     @Override
     public void startVentilation(String vin) throws LynkcoApiException {
-        postCommand(vin, "ventilate_start", "{}");
+        postCommand(vin, "ventilate_start", null);
     }
 
     @Override
     public void stopVentilation(String vin) throws LynkcoApiException {
-        postCommand(vin, "ventilate_stop", "{}");
+        postCommand(vin, "ventilate_stop", null);
     }
 
     // --- Engine: not exposed by the gateway -------------------------------------------------
@@ -300,19 +299,19 @@ public class GatewayPlatform implements VehiclePlatform {
 
     @Override
     public void lockDoors(String vin) throws LynkcoApiException {
-        postCommand(vin, "door_lock", "{}");
+        postCommand(vin, "door_lock", null);
     }
 
     @Override
     public void unlockDoors(String vin) throws LynkcoApiException {
-        postCommand(vin, "door_unlock", "{}");
+        postCommand(vin, "door_unlock", null);
     }
 
     // --- Horn / lights ----------------------------------------------------------------------
 
     @Override
     public void startFlashLights(String vin) throws LynkcoApiException {
-        postCommand(vin, "flash_lights", "{}");
+        postCommand(vin, "flash_lights", null);
     }
 
     @Override
@@ -323,7 +322,7 @@ public class GatewayPlatform implements VehiclePlatform {
 
     @Override
     public void startHonk(String vin) throws LynkcoApiException {
-        postCommand(vin, "honk_horn", "{}");
+        postCommand(vin, "honk_horn", null);
     }
 
     @Override
@@ -333,15 +332,15 @@ public class GatewayPlatform implements VehiclePlatform {
 
     @Override
     public void startHonkFlash(String vin) throws LynkcoApiException {
-        postCommand(vin, "honk_horn", "{}");
-        postCommand(vin, "flash_lights", "{}");
+        postCommand(vin, "honk_horn", null);
+        postCommand(vin, "flash_lights", null);
     }
 
     // --- Gateway-only features --------------------------------------------------------------
 
     @Override
     public void setChargeLimit(String vin, int percent) throws LynkcoApiException {
-        postCommand(vin, "set_charge_limit?percent=" + percent, "{}");
+        postCommand(vin, "set_charge_limit?percent=" + percent, null);
     }
 
     @Override
@@ -356,17 +355,17 @@ public class GatewayPlatform implements VehiclePlatform {
 
     @Override
     public void openSunroof(String vin) throws LynkcoApiException {
-        postCommand(vin, "sun_roof_open", "{}");
+        postCommand(vin, "sun_roof_open", null);
     }
 
     @Override
     public void closeSunroof(String vin) throws LynkcoApiException {
-        postCommand(vin, "sun_roof_close", "{}");
+        postCommand(vin, "sun_roof_close", null);
     }
 
     @Override
     public void unlockGlovebox(String vin) throws LynkcoApiException {
-        postCommand(vin, "glovebox_unlock", "{}");
+        postCommand(vin, "glovebox_unlock", null);
     }
 
     // --- HTTP / signing helpers -------------------------------------------------------------
@@ -377,7 +376,7 @@ public class GatewayPlatform implements VehiclePlatform {
         return array.toString();
     }
 
-    private void postCommand(String vin, String command, String body) throws LynkcoApiException {
+    private void postCommand(String vin, String command, @Nullable String body) throws LynkcoApiException {
         ensureDeviceRegistered();
         String url = GATEWAY_COMMAND_BASE + "/vehicle/" + vin + "/command/" + command;
         try {
@@ -457,10 +456,9 @@ public class GatewayPlatform implements VehiclePlatform {
                 .header("X-App-Name", GATEWAY_APP_NAME).header("X-App-Version", GATEWAY_APP_VERSION)
                 .header("X-App-Build-Number", GATEWAY_APP_BUILD_NUMBER)
                 .header("X-Device-OS-Version", GATEWAY_DEVICE_OS_VERSION).header("X-Device-Model", GATEWAY_DEVICE_MODEL)
-                .header("X-Device-Language", GATEWAY_DEVICE_LANGUAGE).header(HttpHeader.ACCEPT, "application/json")
-                .header(HttpHeader.CONTENT_TYPE, "application/json");
+                .header("X-Device-Language", GATEWAY_DEVICE_LANGUAGE).header(HttpHeader.ACCEPT, "application/json");
         if (body != null) {
-            request.content(new StringContentProvider(body));
+            request.header(HttpHeader.CONTENT_TYPE, "application/json").content(new StringContentProvider(body));
         }
         return request;
     }
