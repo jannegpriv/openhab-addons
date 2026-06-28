@@ -19,9 +19,6 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.ProxyConfiguration;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -32,8 +29,6 @@ import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
@@ -47,12 +42,9 @@ import com.google.gson.Gson;
 @Component(configurationPid = "binding.lynkco", service = ThingHandlerFactory.class)
 public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
 
-    private final Logger logger = LoggerFactory.getLogger(LynkcoHandlerFactory.class);
-
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_VEHICLE, THING_TYPE_BRIDGE);
     private final Gson gson;
-    private HttpClient httpClient;
-    private static final boolean DEBUG = false;
+    private final HttpClient httpClient;
 
     @Activate
     public LynkcoHandlerFactory(@Reference HttpClientFactory httpClientFactory) {
@@ -75,40 +67,5 @@ public class LynkcoHandlerFactory extends BaseThingHandlerFactory {
             return new LynkcoBridgeHandler((Bridge) thing, httpClient, gson);
         }
         return null;
-    }
-
-    @Reference
-    protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
-        logger.debug("setHttpClientFactory this: {}", this);
-
-        // Create an SSL Context Factory with SSL verification disabled
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-
-        // Disable all SSL verification
-        sslContextFactory.setTrustAll(true);
-        sslContextFactory.setValidateCerts(false);
-        sslContextFactory.setValidatePeerCerts(false);
-        sslContextFactory.setEndpointIdentificationAlgorithm(null);
-
-        // Create new HttpClient with SSL disabled
-        this.httpClient = new HttpClient(sslContextFactory);
-
-        // Only add proxy configuration if in DEBUG mode
-        if (DEBUG) {
-            try {
-                ProxyConfiguration proxyConfig = httpClient.getProxyConfiguration();
-                HttpProxy proxy = new HttpProxy("127.0.0.1", 8090);
-                proxyConfig.getProxies().add(proxy);
-            } catch (Exception e) {
-                logger.error("Failed to configure proxy: {}", e.getMessage(), e);
-            }
-        }
-
-        try {
-            this.httpClient.start();
-            logger.debug("HTTP client configured with SSL verification disabled");
-        } catch (Exception e) {
-            logger.error("Failed to start HTTP client: {}", e.getMessage(), e);
-        }
     }
 }

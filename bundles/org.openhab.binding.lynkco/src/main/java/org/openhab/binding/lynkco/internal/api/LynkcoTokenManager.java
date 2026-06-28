@@ -435,7 +435,7 @@ public class LynkcoTokenManager {
 
     private void updateToken(String key, String value) {
         // Update both cache and properties
-        logger.debug("updateToken key: {}, value: {}", key, value);
+        logger.debug("updateToken key: {}", key);
         switch (key) {
             case PROPERTY_CCC_TOKEN:
                 cachedCccToken = value;

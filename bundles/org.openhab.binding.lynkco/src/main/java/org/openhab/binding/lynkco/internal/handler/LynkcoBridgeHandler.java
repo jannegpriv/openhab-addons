@@ -280,7 +280,7 @@ public class LynkcoBridgeHandler extends BaseBridgeHandler {
 
                 LynkcoBridgeConfiguration config = getConfigAs(LynkcoBridgeConfiguration.class);
                 String redirectUrl = config.redirect.trim();
-                logger.debug("Processing redirect URL: {}", redirectUrl);
+                logger.debug("Processing redirect URL for authentication");
 
                 TokenResponse tokenResponse = api.getTokensFromRedirectUri(redirectUrl, codeVerifier);
 

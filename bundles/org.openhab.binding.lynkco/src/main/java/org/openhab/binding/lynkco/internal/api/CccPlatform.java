@@ -291,7 +291,6 @@ public class CccPlatform implements VehiclePlatform {
         }
 
         String token = tokenManager.getCccToken();
-        logger.debug("fetchData CCC token: {}", token);
         try {
             Request request = httpClient.newRequest(endpoint).method(HttpMethod.GET)
                     .header("Authorization", "Bearer " + token).header("Content-Type", "application/json");

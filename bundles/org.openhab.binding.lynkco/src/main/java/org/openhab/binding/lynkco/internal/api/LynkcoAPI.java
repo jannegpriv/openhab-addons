@@ -398,7 +398,7 @@ public class LynkcoAPI {
                 }
             }
         }
-        logger.debug("Could not find query parameter {} in URL {}", paramName, url);
+        logger.debug("Could not find query parameter {} in redirect URL", paramName);
         return "";
     }
 
@@ -485,7 +485,7 @@ public class LynkcoAPI {
                         LynkcoApiException.ErrorType.AUTHENTICATION_FAILED);
             }
 
-            logger.debug("Extracted code from redirect URI: {}", code);
+            logger.debug("Extracted authorization code from redirect URI");
 
             // Get tokens using the code
             return getTokens(code, codeVerifier);
