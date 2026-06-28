@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +83,17 @@ import org.slf4j.LoggerFactory;
 public class LynkcoVehicleHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(LynkcoVehicleHandler.class);
+
+    // Channels with no data source on the modern gateway (they exist for the legacy CCC platform).
+    // They are removed from gateway vehicles so only gateway-supported channels remain.
+    private static final Set<String> GATEWAY_UNSUPPORTED_GROUPS = Set.of(GROUP_MAINTENANCE, GROUP_BULBS, GROUP_SAFETY,
+            GROUP_TYRES, GROUP_TRIP, GROUP_SPEED, GROUP_ENGINE_CONTROL);
+    private static final Set<String> GATEWAY_UNSUPPORTED_CHANNELS = Set.of(GROUP_BATTERY + "#" + BATTERY_CHARGE,
+            GROUP_BATTERY + "#" + BATTERY_HEALTH, GROUP_BATTERY + "#" + BATTERY_VOLTAGE,
+            GROUP_BATTERY + "#" + BATTERY_ENERGY, GROUP_BATTERY + "#" + BATTERY_POWER,
+            GROUP_CHARGING + "#" + POWER_MODE, GROUP_CLIMATE + "#" + TEMPERATURE_EXTERIOR,
+            GROUP_DOORS + "#" + ALARM_STATUS, GROUP_VEHICLE_STATUS + "#" + CHANNEL_KEY_STATUS,
+            GROUP_VEHICLE_STATUS + "#" + CHANNEL_USAGE_MODE);
 
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
     private Platform platform = Platform.GATEWAY;
@@ -685,6 +697,12 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             String group = channel.getUID().getGroupId();
             String id = channel.getUID().getIdWithoutGroup();
             boolean drop = false;
+            // This method only runs for gateway vehicles (model is known), so remove channels the
+            // gateway does not provide (they only carry data on the legacy CCC platform).
+            if (group != null && (GATEWAY_UNSUPPORTED_GROUPS.contains(group)
+                    || GATEWAY_UNSUPPORTED_CHANNELS.contains(group + "#" + id))) {
+                drop = true;
+            }
             if (bev && (GROUP_FUEL.equals(group) || GROUP_ENGINE_CONTROL.equals(group))) {
                 drop = true; // BEV (e.g. 02) has no combustion engine or fuel tank
             }
