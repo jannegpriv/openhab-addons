@@ -93,7 +93,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             GROUP_BATTERY + "#" + BATTERY_ENERGY, GROUP_BATTERY + "#" + BATTERY_POWER,
             GROUP_CHARGING + "#" + POWER_MODE, GROUP_CLIMATE + "#" + TEMPERATURE_EXTERIOR,
             GROUP_DOORS + "#" + ALARM_STATUS, GROUP_VEHICLE_STATUS + "#" + CHANNEL_KEY_STATUS,
-            GROUP_VEHICLE_STATUS + "#" + CHANNEL_USAGE_MODE);
+            GROUP_VEHICLE_STATUS + "#" + CHANNEL_USAGE_MODE, GROUP_FUEL + "#" + FUEL_LEVEL_STATUS,
+            GROUP_FUEL + "#" + FUEL_CONSUMPTION_LAST);
 
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
     private Platform platform = Platform.GATEWAY;
@@ -466,6 +467,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return getChargingValue(channelId, dto.record.electricStatus, dto.shadow.evs);
             case GROUP_CHARGING_CONTROL:
                 return getChargingControlValue(channelId, dto.record.electricStatus);
+            case GROUP_HEATERS_CONTROL:
+                return getHeaterValue(channelId, dto.heaters);
             case GROUP_CLIMATE:
                 return getClimateValue(channelId, dto.record.climate);
             case GROUP_CLIMATE_CONTROL:
@@ -726,6 +729,22 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             logger.debug("Removed {} channels not applicable to {} ({})", toRemove.size(), model.getDisplayName(),
                     dto.propulsion);
         }
+    }
+
+    private State getHeaterValue(String channelId, LynkcoDTO.Heaters heaters) {
+        switch (channelId) {
+            case CHANNEL_HEATER_SEAT_DRIVER:
+                return OnOffType.from(heaters.seatDriver);
+            case CHANNEL_HEATER_SEAT_PASSENGER:
+                return OnOffType.from(heaters.seatPassenger);
+            case CHANNEL_HEATER_SEAT_REAR_LEFT:
+                return OnOffType.from(heaters.seatRearLeft);
+            case CHANNEL_HEATER_SEAT_REAR_RIGHT:
+                return OnOffType.from(heaters.seatRearRight);
+            case CHANNEL_HEATER_STEERING_WHEEL:
+                return OnOffType.from(heaters.steeringWheel);
+        }
+        return UnDefType.UNDEF;
     }
 
     private State getChargingControlValue(String channelId, ElectricStatus electricStatus) {

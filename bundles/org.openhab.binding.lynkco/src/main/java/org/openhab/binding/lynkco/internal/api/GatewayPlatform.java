@@ -219,6 +219,13 @@ public class GatewayPlatform implements VehiclePlatform {
             if (!climate.engineStatus.isEmpty()) {
                 dto.shadow.bvs.engineStatus = climate.engineStatus;
             }
+            if (climate.heaters != null) {
+                dto.heaters.seatDriver = heaterActive(climate.heaters.frontLeftSeat);
+                dto.heaters.seatPassenger = heaterActive(climate.heaters.frontRightSeat);
+                dto.heaters.seatRearLeft = heaterActive(climate.heaters.rearLeftSeat);
+                dto.heaters.seatRearRight = heaterActive(climate.heaters.rearRightSeat);
+                dto.heaters.steeringWheel = heaterActive(climate.heaters.steeringWheel);
+            }
         }
 
         if (location != null && location.vehicleLocation != null && location.vehicleLocation.coordinates != null) {
@@ -236,6 +243,10 @@ public class GatewayPlatform implements VehiclePlatform {
         }
 
         return dto;
+    }
+
+    private static boolean heaterActive(GatewayDTO.@Nullable Heater heater) {
+        return heater != null && "ACTIVE".equalsIgnoreCase(heater.status);
     }
 
     private static String contact(String gatewayStatus, String closedToken, String openToken) {

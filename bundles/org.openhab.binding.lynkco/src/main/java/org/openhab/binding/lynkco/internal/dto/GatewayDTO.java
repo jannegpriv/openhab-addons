@@ -100,6 +100,19 @@ public class GatewayDTO {
         public String status = "";
         public String updatedAt = "";
         public String engineStatus = "";
+        public @Nullable Heaters heaters;
+    }
+
+    public static class Heaters {
+        public @Nullable Heater steeringWheel;
+        public @Nullable Heater frontLeftSeat;
+        public @Nullable Heater frontRightSeat;
+        public @Nullable Heater rearLeftSeat;
+        public @Nullable Heater rearRightSeat;
+    }
+
+    public static class Heater {
+        public String status = "";
     }
 
     /** {@code /vehicle/{vin}/doors_windows_state} */

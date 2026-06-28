@@ -27,6 +27,16 @@ public class LynkcoDTO {
     // Detected model code (e.g. "DX11") and propulsion ("PHEV"/"BEV"); populated by the gateway.
     public String model = "";
     public String propulsion = "";
+    // Current heater on/off states (gateway only).
+    public Heaters heaters = new Heaters();
+
+    public static class Heaters {
+        public boolean seatDriver;
+        public boolean seatPassenger;
+        public boolean seatRearLeft;
+        public boolean seatRearRight;
+        public boolean steeringWheel;
+    }
 
     public static class RecordDTO {
         public Battery battery = new Battery();
