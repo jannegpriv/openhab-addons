@@ -29,6 +29,8 @@ public class LynkcoDTO {
     public String propulsion = "";
     // Current heater on/off states (gateway only).
     public Heaters heaters = new Heaters();
+    // True while the vehicle is being driven (gateway driveModeEnabled); drives faster polling.
+    public boolean driveModeActive;
 
     public static class Heaters {
         public boolean seatDriver;

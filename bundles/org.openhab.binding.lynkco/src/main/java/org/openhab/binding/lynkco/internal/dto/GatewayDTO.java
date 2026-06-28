@@ -28,6 +28,7 @@ public class GatewayDTO {
         public @Nullable StatusValue centralLock;
         public @Nullable ClimateControlSummary climateControl;
         public @Nullable StatusValue gloveBox;
+        public boolean driveModeEnabled;
     }
 
     public static class StatusValue {

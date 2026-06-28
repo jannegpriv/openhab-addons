@@ -99,6 +99,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
     private Platform platform = Platform.GATEWAY;
     private boolean channelsAdjusted = false;
+    private long currentIntervalSeconds = -1;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
 
@@ -397,6 +398,9 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
     }
 
+    // Faster polling interval (seconds) used while the vehicle is being driven.
+    private static final long DRIVING_INTERVAL_SECONDS = 60;
+
     private void pollVehicleData() {
         try {
             VehiclePlatform api = getPlatform();
@@ -406,6 +410,12 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             }
             LynkcoDTO vehicleData = api.fetchVehicleData(config.vin);
             update(vehicleData);
+            // Poll every 60 s while driving (for live position), revert to the configured interval
+            // when stopped.
+            long desired = vehicleData.driveModeActive ? DRIVING_INTERVAL_SECONDS : config.refresh * 60L;
+            if (desired != currentIntervalSeconds) {
+                scheduleRefresh(desired);
+            }
         } catch (Exception e) {
             logger.debug("Error polling data for VIN {}", config.vin, e);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error polling vehicle data.");
@@ -413,11 +423,17 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     }
 
     private void startAutomaticRefresh() {
-        ScheduledFuture<?> refreshJob = this.refreshJob;
-        if (refreshJob == null || refreshJob.isCancelled()) {
-            this.refreshJob = scheduler.scheduleWithFixedDelay(this::pollVehicleData, 0, config.refresh,
-                    TimeUnit.MINUTES);
+        scheduleRefresh(config.refresh * 60L);
+    }
+
+    private synchronized void scheduleRefresh(long seconds) {
+        ScheduledFuture<?> job = this.refreshJob;
+        if (job != null) {
+            job.cancel(false);
         }
+        currentIntervalSeconds = seconds;
+        logger.debug("Polling VIN {} every {} s", config.vin, seconds);
+        this.refreshJob = scheduler.scheduleWithFixedDelay(this::pollVehicleData, 0, seconds, TimeUnit.SECONDS);
     }
 
     private void stopAutomaticRefresh() {
@@ -425,6 +441,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             refreshJob.cancel(true);
             this.refreshJob = null;
         }
+        currentIntervalSeconds = -1;
     }
 
     private synchronized void updateNow() {

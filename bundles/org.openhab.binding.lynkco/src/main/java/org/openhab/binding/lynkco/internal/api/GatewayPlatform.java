@@ -145,6 +145,7 @@ public class GatewayPlatform implements VehiclePlatform {
             if (summary.climateControl != null) {
                 dto.shadow.bvs.engineStatus = summary.climateControl.engineStatus;
             }
+            dto.driveModeActive = summary.driveModeEnabled;
         }
 
         if (doors != null) {
