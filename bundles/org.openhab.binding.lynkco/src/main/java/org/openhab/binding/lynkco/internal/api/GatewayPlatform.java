@@ -17,6 +17,7 @@ import static org.openhab.binding.lynkco.internal.LynkcoBindingConstants.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,9 +29,10 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.openhab.binding.lynkco.internal.dto.GatewayDTO;
 import org.openhab.binding.lynkco.internal.dto.LynkcoDTO;
-import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.RecordDTO;
-import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.ShadowDTO;
+import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Evs.ChargerStatusData.ChargerConnectionStatus;
+import org.openhab.binding.lynkco.internal.dto.LynkcoDTO.Evs.ChargerStatusData.ChargerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +44,14 @@ import com.google.gson.JsonArray;
  * gateway used by Lynk&Co 01 (2025), 02 and 08.
  *
  * Every authenticated request is signed: a per-request {@code X-NONCE} (UUID) is combined with the
- * request path and the {@code snowflakeId} claim from the access token to form
- * {@code X-SIGNATURE = SHA-256(snowflakeId + nonce + path)} (hex). The OAuth access token is used
- * directly as the bearer token (no {@code cccToken}).
+ * request path (relative to the signature base) and the {@code snowflakeId} claim from the access
+ * token to form {@code X-SIGNATURE = SHA-256(snowflakeId + nonce + path)} (hex). The OAuth access
+ * token is used directly as the bearer token (no {@code cccToken}), and the device session must be
+ * validated via {@code iamservice/validate-session} before data/command calls.
  *
- * NOTE: The exact JSON response shapes of the separate gateway state endpoints and some command
- * payloads still need to be confirmed against captured traffic from a real vehicle (see the
- * implementation plan, "Step 0"). For now the combined {@code vehicle_data} endpoint is parsed into
- * the shared {@link LynkcoDTO}; the richer state endpoints can be layered in once verified.
+ * The separate gateway state endpoints (vehicle_data, vehicle_metadata, location_state,
+ * charge_state, climate_state, doors_windows_state, fuel_state) are fetched and mapped into the
+ * shared {@link LynkcoDTO} so the vehicle handler and its channels are reused across platforms.
  *
  * @author Jan Gustafsson - Initial contribution
  */
@@ -74,28 +76,169 @@ public class GatewayPlatform implements VehiclePlatform {
         this.tokenManager = tokenManager;
     }
 
-    // Separate gateway state endpoints. Their exact JSON shapes still need to be confirmed against
-    // a real vehicle; logDiagnosticEndpoints() dumps them at TRACE level to make that capture easy.
-    private static final String[] DIAGNOSTIC_ENDPOINTS = { "/list/vehicles", "/vehicle/%s/vehicle_data",
-            "/vehicle/%s/vehicle_metadata", "/vehicle/%s/location_state", "/vehicle/%s/charge_state",
-            "/vehicle/%s/climate_state", "/vehicle/%s/doors_windows_state", "/vehicle/%s/fuel_state" };
-
     @Override
     public LynkcoDTO fetchVehicleData(String vin) throws LynkcoApiException {
-        if (logger.isTraceEnabled()) {
-            logDiagnosticEndpoints(vin);
+        ensureDeviceRegistered();
+        String base = GATEWAY_LOVE_BASE + "/vehicle/" + vin;
+        GatewayDTO.VehicleData summary = getDto(base + "/vehicle_data", GatewayDTO.VehicleData.class);
+        GatewayDTO.Metadata metadata = getDto(base + "/vehicle_metadata", GatewayDTO.Metadata.class);
+        GatewayDTO.LocationState location = getDto(base + "/location_state", GatewayDTO.LocationState.class);
+        GatewayDTO.ChargeState charge = getDto(base + "/charge_state", GatewayDTO.ChargeState.class);
+        GatewayDTO.ClimateState climate = getDto(base + "/climate_state", GatewayDTO.ClimateState.class);
+        GatewayDTO.DoorsWindowsState doors = getDto(base + "/doors_windows_state", GatewayDTO.DoorsWindowsState.class);
+        GatewayDTO.FuelStateResponse fuel = getDto(base + "/fuel_state", GatewayDTO.FuelStateResponse.class);
+
+        if (summary == null && charge == null && doors == null && climate == null) {
+            throw new LynkcoApiException("No data received from gateway", LynkcoApiException.ErrorType.API_ERROR);
         }
-        LynkcoDTO vehicleData = new LynkcoDTO();
-        String json = getJson(GATEWAY_LOVE_BASE + "/vehicle/" + vin + "/vehicle_data");
-        RecordDTO record = gson.fromJson(json, RecordDTO.class);
-        ShadowDTO shadow = gson.fromJson(json, ShadowDTO.class);
-        if (record != null) {
-            vehicleData.record = record;
+        return mapToLynkcoDTO(summary, metadata, location, charge, climate, doors, fuel);
+    }
+
+    private <T> @Nullable T getDto(String url, Class<T> clazz) {
+        try {
+            return gson.fromJson(getJson(url), clazz);
+        } catch (LynkcoApiException e) {
+            logger.debug("Gateway fetch {} failed: {}", url, e.getMessage());
+            return null;
         }
-        if (shadow != null) {
-            vehicleData.shadow = shadow;
+    }
+
+    /**
+     * Map the gateway state endpoints into the shared {@link LynkcoDTO} so the vehicle handler and
+     * its existing channels can be reused. Gateway values (e.g. door "CLOSED") are translated into
+     * the enum strings the handler expects (e.g. "DOOR_OPEN_STATUS_CLOSED").
+     */
+    private LynkcoDTO mapToLynkcoDTO(GatewayDTO.@Nullable VehicleData summary, GatewayDTO.@Nullable Metadata metadata,
+            GatewayDTO.@Nullable LocationState location, GatewayDTO.@Nullable ChargeState charge,
+            GatewayDTO.@Nullable ClimateState climate, GatewayDTO.@Nullable DoorsWindowsState doors,
+            GatewayDTO.@Nullable FuelStateResponse fuel) {
+        LynkcoDTO dto = new LynkcoDTO();
+        String now = Instant.now().toString();
+
+        // Default every timestamp the handler may read to a valid value; setting the charger
+        // updatedAt also drives the ONLINE status check in the handler.
+        dto.shadow.evs.chargerStatusData.updatedAt = now;
+        dto.shadow.vls.doorLocksUpdatedAt = now;
+        dto.shadow.vls.windowStatusDriverUpdatedAt = now;
+        dto.shadow.vms.bulbStatus.updatedAt = now;
+        dto.shadow.vrs.airbagStatus.updatedAt = now;
+        dto.shadow.vrs.seatBeltStatus.updatedAt = now;
+        dto.shadow.vrs.vehicleTyresStatus.updatedAt = now;
+        dto.shadow.bvs.engineStatusUpdatedAt = now;
+        dto.record.odometer.vehicleUpdatedAt = now;
+        dto.record.fuel.vehicleUpdatedAt = now;
+        dto.record.battery.vehicleUpdatedAt = now;
+        dto.record.electricStatus.vehicleUpdatedAt = now;
+        dto.record.climate.vehicleUpdatedAt = now;
+        dto.record.trip.vehicleUpdatedAt = now;
+        dto.record.speed.vehicleUpdatedAt = now;
+        dto.record.position.vehicleUpdatedAt = now;
+        dto.shadow.vls.alarmStatusData = "ALARM_NOT_ACTIVATED";
+        dto.record.fuel.averageConsumptionLatestDrivingCycle = UNDEFINED;
+
+        if (summary != null) {
+            if (summary.centralLock != null) {
+                dto.shadow.vls.doorLocksStatus = "LOCKED".equals(summary.centralLock.status)
+                        ? "DOOR_LOCKS_STATUS_LOCKED"
+                        : "DOOR_LOCKS_STATUS_UNLOCKED";
+            }
+            if (summary.climateControl != null) {
+                dto.shadow.bvs.engineStatus = summary.climateControl.engineStatus;
+            }
         }
-        return vehicleData;
+
+        if (doors != null) {
+            dto.shadow.vls.doorLocksUpdatedAt = orNow(doors.updatedAt, now);
+            dto.shadow.vls.windowStatusDriverUpdatedAt = orNow(doors.updatedAt, now);
+            dto.shadow.vls.doorOpenStatusDriver = contact(doors.doorFrontLeftStatus, "DOOR_OPEN_STATUS_CLOSED",
+                    "DOOR_OPEN_STATUS_OPEN");
+            dto.shadow.vls.doorOpenStatusPassenger = contact(doors.doorFrontRightStatus, "DOOR_OPEN_STATUS_CLOSED",
+                    "DOOR_OPEN_STATUS_OPEN");
+            dto.shadow.vls.doorOpenStatusDriverRear = contact(doors.doorRearLeftStatus, "DOOR_OPEN_STATUS_CLOSED",
+                    "DOOR_OPEN_STATUS_OPEN");
+            dto.shadow.vls.doorOpenStatusPassengerRear = contact(doors.doorRearRightStatus, "DOOR_OPEN_STATUS_CLOSED",
+                    "DOOR_OPEN_STATUS_OPEN");
+            dto.shadow.vls.engineHoodStatus = contact(doors.hoodStatus, "ENGINE_HOOD_STATUS_CLOSED",
+                    "ENGINE_HOOD_STATUS_OPEN");
+            dto.shadow.vls.trunkOpenStatus = contact(doors.trunkStatus, "TRUNK_OPEN_STATUS_CLOSED",
+                    "TRUNK_OPEN_STATUS_OPEN");
+            dto.shadow.vls.tankFlapStatus = contact(doors.tankFlapStatus, "TANK_FLAP_CLOSED", "TANK_FLAP_OPEN");
+            dto.shadow.vls.windowStatusDriver = contact(doors.windowFrontLeftStatus, "WINDOW_CLOSED", "WINDOW_OPEN");
+            dto.shadow.vls.windowStatusPassenger = contact(doors.windowFrontRightStatus, "WINDOW_CLOSED",
+                    "WINDOW_OPEN");
+            dto.shadow.vls.windowStatusDriverRear = contact(doors.windowRearLeftStatus, "WINDOW_CLOSED", "WINDOW_OPEN");
+            dto.shadow.vls.windowStatusPassengerRear = contact(doors.windowRearRightStatus, "WINDOW_CLOSED",
+                    "WINDOW_OPEN");
+            dto.shadow.vls.sunroofOpenStatus = contact(doors.sunroofStatus, "SUNROOF_CLOSED", "SUNROOF_OPEN");
+        }
+
+        if (charge != null && charge.batteryState != null) {
+            GatewayDTO.BatteryState bs = charge.batteryState;
+            int soc = (int) Math.round(bs.stateOfCharge * 100);
+            dto.record.battery.chargeLevel = soc;
+            dto.record.battery.vehicleUpdatedAt = orNow(bs.updatedAt, now);
+            dto.record.electricStatus.chargeLevel = soc;
+            dto.record.electricStatus.distanceToEmptyOnBatteryOnly = bs.remainingRange != null
+                    ? bs.remainingRange.intValue()
+                    : 0;
+            dto.record.electricStatus.timeToFullyCharged = bs.remainingChargingTime != null
+                    ? bs.remainingChargingTime.intValue()
+                    : 0;
+            dto.record.electricStatus.vehicleUpdatedAt = orNow(bs.updatedAt, now);
+            dto.shadow.evs.chargerStatusData.updatedAt = orNow(bs.updatedAt, now);
+            boolean charging = "CHARGING".equalsIgnoreCase(bs.status);
+            boolean connected = bs.status != null && bs.status.toUpperCase().contains("CONNECT")
+                    && !"DISCONNECTED".equalsIgnoreCase(bs.status);
+            dto.shadow.evs.chargerStatusData.chargerState = charging ? ChargerState.CHARGER_STATE_CHARGN
+                    : ChargerState.CHARGER_STATE_IDLE;
+            dto.shadow.evs.chargerStatusData.chargerConnectionStatus = connected
+                    ? ChargerConnectionStatus.CHARGER_CONNECTION_CONNECTED_WITH_POWER
+                    : ChargerConnectionStatus.CHARGER_CONNECTION_DISCONNECTED;
+        }
+
+        if (fuel != null && fuel.fuelState != null) {
+            double tank = metadata != null && metadata.fuelInfo != null && metadata.fuelInfo.tankCapacity > 0
+                    ? metadata.fuelInfo.tankCapacity
+                    : 100.0;
+            dto.record.fuel.level = fuel.fuelState.percentageOfRemainingFuel * tank;
+            dto.record.fuel.distanceToEmpty = (int) Math.round(fuel.fuelState.remainingRange);
+            dto.record.fuel.averageConsumption = fuel.fuelState.averageConsumption * 10; // handler divides by 10
+            dto.record.fuel.vehicleUpdatedAt = orNow(fuel.fuelState.updatedAt, now);
+        }
+        if (metadata != null && metadata.fuelInfo != null) {
+            dto.record.fuel.fuelType = metadata.fuelInfo.fuelType;
+        }
+
+        if (climate != null) {
+            dto.record.climate.interiorTemp.temp = climate.interiorTemperature;
+            dto.record.climate.preClimateActive = "ACTIVE".equalsIgnoreCase(climate.status);
+            dto.record.climate.vehicleUpdatedAt = orNow(climate.updatedAt, now);
+            if (!climate.engineStatus.isEmpty()) {
+                dto.shadow.bvs.engineStatus = climate.engineStatus;
+            }
+        }
+
+        if (location != null && location.vehicleLocation != null && location.vehicleLocation.coordinates != null) {
+            GatewayDTO.VehicleLocation vl = location.vehicleLocation;
+            dto.record.position.latitude = vl.coordinates.latitude;
+            dto.record.position.longitude = vl.coordinates.longitude;
+            dto.record.position.canBeTrusted = "AVAILABLE".equalsIgnoreCase(vl.status);
+            dto.record.position.vehicleUpdatedAt = orNow(vl.updatedAt, now);
+        }
+
+        if (metadata != null && metadata.vehicle != null) {
+            dto.record.odometer.odometerKm = metadata.vehicle.odometer;
+        }
+
+        return dto;
+    }
+
+    private static String contact(String gatewayStatus, String closedToken, String openToken) {
+        return "CLOSED".equalsIgnoreCase(gatewayStatus) ? closedToken : openToken;
+    }
+
+    private static String orNow(@Nullable String value, String now) {
+        return value == null || value.isEmpty() ? now : value;
     }
 
     // --- Climate / ventilation --------------------------------------------------------------
@@ -241,34 +384,7 @@ public class GatewayPlatform implements VehiclePlatform {
         }
     }
 
-    /**
-     * Fetch every known gateway state endpoint and log the raw response at TRACE level. This is a
-     * diagnostic aid for capturing the JSON shapes from a real vehicle (see the implementation
-     * plan, "Step 0"); failures on individual endpoints are logged and ignored. Enable with
-     * {@code log:set TRACE org.openhab.binding.lynkco} on the karaf console.
-     */
-    private void logDiagnosticEndpoints(String vin) {
-        try {
-            ensureDeviceRegistered();
-        } catch (LynkcoApiException e) {
-            logger.trace("Gateway diagnostic device validation failed: {}", e.getMessage());
-        }
-        for (String template : DIAGNOSTIC_ENDPOINTS) {
-            String path = template.contains("%s") ? String.format(template, vin) : template;
-            String url = GATEWAY_LOVE_BASE + path;
-            try {
-                Request request = signedRequest(HttpMethod.GET, url, null);
-                ContentResponse response = request.send();
-                logger.trace("Gateway diagnostic GET {} -> HTTP {}: {}", url, response.getStatus(),
-                        response.getContentAsString());
-            } catch (Exception e) {
-                logger.trace("Gateway diagnostic GET {} failed: {}", url, e.getMessage());
-            }
-        }
-    }
-
     private String getJson(String url) throws LynkcoApiException {
-        ensureDeviceRegistered();
         try {
             Request request = signedRequest(HttpMethod.GET, url, null);
             ContentResponse response = request.send();

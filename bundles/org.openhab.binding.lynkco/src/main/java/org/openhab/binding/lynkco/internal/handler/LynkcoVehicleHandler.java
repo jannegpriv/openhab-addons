@@ -207,7 +207,6 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     @Override
     public void dispose() {
         stopAutomaticRefresh();
-        updateStatus(ThingStatus.REMOVED);
     }
 
     public void actionClimate(boolean start, int climateLevel, int durationInMinutes) {
