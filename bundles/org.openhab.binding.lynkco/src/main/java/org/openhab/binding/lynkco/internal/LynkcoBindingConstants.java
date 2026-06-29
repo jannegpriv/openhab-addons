@@ -89,6 +89,7 @@ public class LynkcoBindingConstants {
     public static final String CHANNEL_ENGINE_STATUS = "engine-status";
     public static final String CHANNEL_KEY_STATUS = "key-status";
     public static final String CHANNEL_USAGE_MODE = "usage-mode";
+    public static final String CHANNEL_DRIVING = "driving";
 
     // Door channels
     public static final String DOOR_DRIVER = "door-driver";
@@ -142,11 +143,40 @@ public class LynkcoBindingConstants {
     public static final String CHARGER_STATE = "charger-state";
     public static final String CHARGER_CONNECTION_STATUS = "charger-connection-status";
     public static final String POWER_MODE = "power-mode";
+    public static final String CHARGING_POWER = "charging-power";
+    public static final String CHARGING_AVG_CONSUMPTION = "avg-consumption";
+    public static final String CHARGING_START_STOP_STATUS = "start-stop-status";
+    public static final String CHARGE_SCHEDULE_ENABLED = "schedule-enabled";
+    public static final String CHARGING_ENERGY = "energy-kwh";
 
     // Climate channels
     public static final String TEMPERATURE_EXTERIOR = "temp-exterior";
     public static final String TEMPERATURE_INTERIOR = "temp-interior";
     public static final String PRECLIMATE_ACTIVE = "preclimate-active";
+    public static final String CLIMATE_TARGET_TEMP = "target-temp";
+    public static final String CLIMATE_MAX_TEMP = "max-temp";
+    public static final String CLIMATE_MIN_TEMP = "min-temp";
+    public static final String CLIMATE_STARTED_AT = "started-at";
+    public static final String CLIMATE_END_TIME = "end-time";
+    public static final String CLIMATE_DEFROST_ACTIVE = "defrost-active";
+
+    // Charge-lid (doors group, gateway only)
+    public static final String CHARGE_LID = "charge-lid";
+
+    // Position address (gateway only)
+    public static final String LOCATION_ADDRESS = "address";
+
+    // Vehicle info group (gateway only static metadata)
+    public static final String GROUP_VEHICLE_INFO = "vehicle-info";
+    public static final String INFO_MODEL = "model";
+    public static final String INFO_YEAR = "year";
+    public static final String INFO_PROPULSION = "propulsion";
+    public static final String INFO_BATTERY_CAPACITY = "battery-capacity";
+    public static final String INFO_CHARGER_TYPE = "charger-type";
+    public static final String INFO_TANK_CAPACITY = "tank-capacity";
+    public static final String INFO_WEIGHT = "weight";
+    public static final String INFO_TOWING_BRAKED = "towing-braked";
+    public static final String INFO_TOWING_UNBRAKED = "towing-unbraked";
 
     // Common channels
     public static final String CHANNEL_TIMESTAMP = "last-update";
@@ -215,6 +245,7 @@ public class LynkcoBindingConstants {
     public static final String CHANNEL_HEATER_SEAT_DRIVER = "seat-driver";
     public static final String CHANNEL_HEATER_SEAT_PASSENGER = "seat-passenger";
     public static final String CHANNEL_HEATER_SEAT_REAR_LEFT = "seat-rear-left";
+    public static final String CHANNEL_HEATER_SEAT_REAR_CENTER = "seat-rear-center";
     public static final String CHANNEL_HEATER_SEAT_REAR_RIGHT = "seat-rear-right";
     public static final String CHANNEL_HEATER_STEERING_WHEEL = "steering-wheel";
 
@@ -222,6 +253,7 @@ public class LynkcoBindingConstants {
     public static final String HEATER_NAME_DRIVER_SEAT = "front_left_seat";
     public static final String HEATER_NAME_PASSENGER_SEAT = "front_right_seat";
     public static final String HEATER_NAME_REAR_LEFT_SEAT = "rear_left_seat";
+    public static final String HEATER_NAME_REAR_CENTER_SEAT = "rear_center_seat";
     public static final String HEATER_NAME_REAR_RIGHT_SEAT = "rear_right_seat";
     public static final String HEATER_NAME_STEERING_WHEEL = "steering_wheel";
 

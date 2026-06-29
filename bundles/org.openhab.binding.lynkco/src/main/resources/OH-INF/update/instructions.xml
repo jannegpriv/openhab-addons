@@ -3,13 +3,92 @@
 	xmlns:update="https://openhab.org/schemas/update-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/update-description/v1.0.0 https://openhab.org/schemas/update-description-1.0.0.xsd">
 
-	<thing-type uid="electroluxair:electroluxpurea9">
-		<instruction-set targetVersion="1">
-			<add-channel id="uiLight">
-				<type>electroluxair:uiLight</type>
+	<thing-type uid="lynkco:vehicle">
+		<instruction-set targetVersion="2">
+			<!-- Doors: charge port lid -->
+			<add-channel id="charge-lid" groupIds="doors">
+				<type>lynkco:charge-lid</type>
 			</add-channel>
-			<add-channel id="safetyLock">
-				<type>electroluxair:safetyLock</type>
+
+			<!-- Position: nearest street address -->
+			<add-channel id="address" groupIds="position">
+				<type>lynkco:address</type>
+			</add-channel>
+
+			<!-- Charging: additional gateway metrics -->
+			<add-channel id="charging-power" groupIds="charging">
+				<type>lynkco:charging-power</type>
+			</add-channel>
+			<add-channel id="avg-consumption" groupIds="charging">
+				<type>lynkco:charging-avg-consumption</type>
+			</add-channel>
+			<add-channel id="energy-kwh" groupIds="charging">
+				<type>lynkco:charging-energy</type>
+			</add-channel>
+			<add-channel id="start-stop-status" groupIds="charging">
+				<type>lynkco:charging-start-stop-status</type>
+			</add-channel>
+			<add-channel id="schedule-enabled" groupIds="charging">
+				<type>lynkco:charge-schedule-enabled</type>
+			</add-channel>
+
+			<!-- Climate: target/min/max temperature, defrost, schedule times -->
+			<add-channel id="target-temp" groupIds="climate">
+				<type>lynkco:temperature</type>
+			</add-channel>
+			<add-channel id="max-temp" groupIds="climate">
+				<type>lynkco:temperature</type>
+			</add-channel>
+			<add-channel id="min-temp" groupIds="climate">
+				<type>lynkco:temperature</type>
+			</add-channel>
+			<add-channel id="defrost-active" groupIds="climate">
+				<type>lynkco:switch</type>
+			</add-channel>
+			<add-channel id="started-at" groupIds="climate">
+				<type>lynkco:timestamp</type>
+			</add-channel>
+			<add-channel id="end-time" groupIds="climate">
+				<type>lynkco:timestamp</type>
+			</add-channel>
+
+			<!-- Vehicle status: driving flag -->
+			<add-channel id="driving" groupIds="vehicle-status">
+				<type>lynkco:driving</type>
+			</add-channel>
+
+			<!-- Heater control: rear center seat (08) -->
+			<add-channel id="seat-rear-center" groupIds="heaters-control">
+				<type>lynkco:heater-control</type>
+			</add-channel>
+
+			<!-- Vehicle info: static metadata -->
+			<add-channel id="model" groupIds="vehicle-info">
+				<type>lynkco:info-model</type>
+			</add-channel>
+			<add-channel id="year" groupIds="vehicle-info">
+				<type>lynkco:info-year</type>
+			</add-channel>
+			<add-channel id="propulsion" groupIds="vehicle-info">
+				<type>lynkco:info-propulsion</type>
+			</add-channel>
+			<add-channel id="battery-capacity" groupIds="vehicle-info">
+				<type>lynkco:info-battery-capacity</type>
+			</add-channel>
+			<add-channel id="charger-type" groupIds="vehicle-info">
+				<type>lynkco:info-charger-type</type>
+			</add-channel>
+			<add-channel id="tank-capacity" groupIds="vehicle-info">
+				<type>lynkco:info-tank-capacity</type>
+			</add-channel>
+			<add-channel id="weight" groupIds="vehicle-info">
+				<type>lynkco:info-weight</type>
+			</add-channel>
+			<add-channel id="towing-braked" groupIds="vehicle-info">
+				<type>lynkco:info-towing-braked</type>
+			</add-channel>
+			<add-channel id="towing-unbraked" groupIds="vehicle-info">
+				<type>lynkco:info-towing-unbraked</type>
 			</add-channel>
 		</instruction-set>
 	</thing-type>

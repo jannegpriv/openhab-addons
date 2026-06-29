@@ -61,17 +61,27 @@ public class GatewayDTO {
     public static class Metadata {
         public @Nullable VehicleMeta vehicle;
         public @Nullable FuelInfo fuelInfo;
+        public @Nullable BatteryInfo batteryInfo;
     }
 
     public static class VehicleMeta {
         public String model = "";
         public String propulsionType = "";
         public long odometer;
+        public int year;
+        public double weight;
+        public double towingCapacityUnbraked;
+        public double towingCapacityBraked;
     }
 
     public static class FuelInfo {
         public String fuelType = "";
         public double tankCapacity;
+    }
+
+    public static class BatteryInfo {
+        public String chargerType = "";
+        public double batteryCapacity;
     }
 
     /** {@code /vehicle/{vin}/location_state} */
@@ -82,6 +92,7 @@ public class GatewayDTO {
     public static class VehicleLocation {
         public String updatedAt = "";
         public String status = "";
+        public String longAddress = "";
         public @Nullable Coordinates coordinates;
     }
 
@@ -101,7 +112,19 @@ public class GatewayDTO {
         public @Nullable Double remainingChargingTime;
         public String updatedAt = "";
         public String status = "";
+        public String startStopStatus = "";
+        public @Nullable Double powerAverageConsumption;
         public @Nullable ChargeLimit chargeLimit;
+        public @Nullable ChargingSpeed chargingSpeed;
+        public @Nullable ChargeSchedule chargeSchedule;
+    }
+
+    public static class ChargeSchedule {
+        public boolean enabled;
+    }
+
+    public static class ChargingSpeed {
+        public double kW;
     }
 
     public static class ChargeLimit {
@@ -115,17 +138,23 @@ public class GatewayDTO {
     public static class ClimateState {
         public double interiorTemperature;
         public double targetTemperature;
+        public double maxAvailableHvacTemperature;
+        public double minAvailableHvacTemperature;
         public String status = "";
         public String updatedAt = "";
+        public String startedAt = "";
+        public String endTime = "";
         public String engineStatus = "";
         public @Nullable Heaters heaters;
     }
 
     public static class Heaters {
         public @Nullable Heater steeringWheel;
+        public @Nullable Heater windshield;
         public @Nullable Heater frontLeftSeat;
         public @Nullable Heater frontRightSeat;
         public @Nullable Heater rearLeftSeat;
+        public @Nullable Heater rearCenterSeat;
         public @Nullable Heater rearRightSeat;
     }
 
@@ -147,6 +176,7 @@ public class GatewayDTO {
         public String hoodStatus = "";
         public String trunkStatus = "";
         public String tankFlapStatus = "";
+        public String chargeLidStatus = "";
         public String updatedAt = "";
     }
 

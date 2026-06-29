@@ -20,6 +20,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -170,6 +171,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_DRIVER:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_PASSENGER:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_LEFT:
+            case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_CENTER:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_RIGHT:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_STEERING_WHEEL:
                 if (command instanceof OnOffType) {
@@ -389,6 +391,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return HEATER_NAME_PASSENGER_SEAT;
             case CHANNEL_HEATER_SEAT_REAR_LEFT:
                 return HEATER_NAME_REAR_LEFT_SEAT;
+            case CHANNEL_HEATER_SEAT_REAR_CENTER:
+                return HEATER_NAME_REAR_CENTER_SEAT;
             case CHANNEL_HEATER_SEAT_REAR_RIGHT:
                 return HEATER_NAME_REAR_RIGHT_SEAT;
             case CHANNEL_HEATER_STEERING_WHEEL:
@@ -467,7 +471,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private State getValue(String groupId, String channelId, LynkcoDTO dto) {
         switch (groupId) {
             case GROUP_DOORS:
-                return getDoorsValue(channelId, dto.shadow.vls);
+                return getDoorsValue(channelId, dto.shadow.vls, dto.chargeLidOpen);
             case GROUP_DOORS_CONTROL:
                 return getDoorsLocksValue(channelId, dto.shadow.vls);
             case GROUP_WINDOWS:
@@ -486,8 +490,10 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return getChargingControlValue(channelId, dto.record.electricStatus);
             case GROUP_HEATERS_CONTROL:
                 return getHeaterValue(channelId, dto.heaters);
+            case GROUP_VEHICLE_INFO:
+                return getVehicleInfoValue(channelId, dto);
             case GROUP_CLIMATE:
-                return getClimateValue(channelId, dto.record.climate);
+                return getClimateValue(channelId, dto.record.climate, dto.heaters);
             case GROUP_CLIMATE_CONTROL:
                 return getClimateControlValue(channelId, dto.record.climate);
             case GROUP_MAINTENANCE:
@@ -501,7 +507,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case GROUP_TRIP:
                 return getTripValue(channelId, dto.record.trip);
             case GROUP_VEHICLE_STATUS:
-                return getVehicleStatusValue(channelId, dto.shadow.bvs);
+                return getVehicleStatusValue(channelId, dto.shadow.bvs, dto.driveModeActive);
             case GROUP_ENGINE_CONTROL:
                 return getEngineStatusValue(channelId, dto.shadow.bvs);
             case GROUP_SPEED:
@@ -518,21 +524,26 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                         String groupId = channelUID.getGroupId();
                         String channelId = channelUID.getIdWithoutGroup();
                         if (groupId != null) {
-                            State state = getValue(groupId, channelId, dto);
-                            logger.trace("Channel: {}, State: {}", channelUID, state);
-                            updateState(channelUID, state);
+                            try {
+                                State state = getValue(groupId, channelId, dto);
+                                logger.trace("Channel: {}, State: {}", channelUID, state);
+                                updateState(channelUID, state);
 
-                            // Sync climate control channel with actual state
-                            if (PRECLIMATE_ACTIVE.equals(channelId) && groupId.equals(GROUP_CLIMATE)) {
-                                // Create the control channel UID
-                                ChannelUID controlChannelUID = new ChannelUID(getThing().getUID(),
-                                        GROUP_CLIMATE_CONTROL, CHANNEL_PRECLIMATE);
+                                // Sync climate control channel with actual state
+                                if (PRECLIMATE_ACTIVE.equals(channelId) && groupId.equals(GROUP_CLIMATE)) {
+                                    // Create the control channel UID
+                                    ChannelUID controlChannelUID = new ChannelUID(getThing().getUID(),
+                                            GROUP_CLIMATE_CONTROL, CHANNEL_PRECLIMATE);
 
-                                // Check if the channel exists and is linked before updating
-                                Channel controlChannel = getThing().getChannel(controlChannelUID);
-                                if (controlChannel != null && isLinked(controlChannelUID)) {
-                                    updateState(controlChannelUID, state);
+                                    // Check if the channel exists and is linked before updating
+                                    Channel controlChannel = getThing().getChannel(controlChannelUID);
+                                    if (controlChannel != null && isLinked(controlChannelUID)) {
+                                        updateState(controlChannelUID, state);
+                                    }
                                 }
+                            } catch (RuntimeException e) {
+                                // A single malformed value must not abort updates for the other channels.
+                                logger.warn("Failed to update channel {}: {}", channelUID, e.getMessage());
                             }
                         }
                     });
@@ -545,10 +556,12 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
     }
 
-    private State getDoorsValue(String channelId, Vls vls) {
+    private State getDoorsValue(String channelId, Vls vls, boolean chargeLidOpen) {
         switch (channelId) {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(vls.doorLocksUpdatedAt);
+            case CHARGE_LID:
+                return chargeLidOpen ? OpenClosedType.OPEN : OpenClosedType.CLOSED;
             case DOOR_DRIVER:
                 return "DOOR_OPEN_STATUS_CLOSED".equals(vls.doorOpenStatusDriver) ? OpenClosedType.CLOSED
                         : OpenClosedType.OPEN;
@@ -640,9 +653,14 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private State getPositionValue(String channelId, Position position) {
         switch (channelId) {
             case LOCATION:
-                return new PointType(position.latitude + "," + position.longitude + "," + position.altitude);
+                // Round coordinates to 6 decimals (~0.1 m); the gateway reports far more digits than
+                // are meaningful. Locale.ROOT keeps '.' as the decimal separator PointType requires.
+                return new PointType(String.format(Locale.ROOT, "%.6f,%.6f,%d", position.latitude, position.longitude,
+                        position.altitude));
             case LOCATION_TRUSTED:
                 return OnOffType.from(position.canBeTrusted);
+            case LOCATION_ADDRESS:
+                return position.address.isEmpty() ? UnDefType.UNDEF : new StringType(position.address);
             case LOCATION_UPDATED:
                 ZonedDateTime zdt = ZonedDateTime.parse(position.vehicleUpdatedAt);
                 return new DateTimeType(zdt);
@@ -682,6 +700,21 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return new QuantityType<>(electricStatus.distanceToEmptyOnBatteryOnly, KILO(METRE));
             case CHARGING_TIME:
                 return new QuantityType<>(electricStatus.timeToFullyCharged, Units.MINUTE);
+            case CHARGING_POWER:
+                return electricStatus.chargingPower >= 0
+                        ? new QuantityType<>(electricStatus.chargingPower, KILO(Units.WATT))
+                        : UnDefType.UNDEF;
+            case CHARGING_AVG_CONSUMPTION:
+                return electricStatus.avgConsumption >= 0 ? new DecimalType(electricStatus.avgConsumption)
+                        : UnDefType.UNDEF;
+            case CHARGING_START_STOP_STATUS:
+                return electricStatus.startStopStatus.isEmpty() ? UnDefType.UNDEF
+                        : new StringType(electricStatus.startStopStatus);
+            case CHARGE_SCHEDULE_ENABLED:
+                return OnOffType.from(electricStatus.chargeScheduleEnabled);
+            case CHARGING_ENERGY:
+                return electricStatus.energyKwh >= 0 ? new QuantityType<>(electricStatus.energyKwh, Units.KILOWATT_HOUR)
+                        : UnDefType.UNDEF;
             case CHARGER_CONNECTION_STATUS:
                 return new StringType(evs.chargerStatusData.chargerConnectionStatus.name());
             case CHARGER_STATE:
@@ -731,7 +764,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 drop = true; // model 02 has no sunroof
             }
             if (model != LynkcoModel.LYNKCO_08 && GROUP_HEATERS_CONTROL.equals(group)
-                    && (CHANNEL_HEATER_SEAT_REAR_LEFT.equals(id) || CHANNEL_HEATER_SEAT_REAR_RIGHT.equals(id))) {
+                    && (CHANNEL_HEATER_SEAT_REAR_LEFT.equals(id) || CHANNEL_HEATER_SEAT_REAR_CENTER.equals(id)
+                            || CHANNEL_HEATER_SEAT_REAR_RIGHT.equals(id))) {
                 drop = true; // rear-seat heaters only on the 08
             }
             if (drop) {
@@ -756,6 +790,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return OnOffType.from(heaters.seatPassenger);
             case CHANNEL_HEATER_SEAT_REAR_LEFT:
                 return OnOffType.from(heaters.seatRearLeft);
+            case CHANNEL_HEATER_SEAT_REAR_CENTER:
+                return OnOffType.from(heaters.seatRearCenter);
             case CHANNEL_HEATER_SEAT_REAR_RIGHT:
                 return OnOffType.from(heaters.seatRearRight);
             case CHANNEL_HEATER_STEERING_WHEEL:
@@ -772,7 +808,36 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         return UnDefType.UNDEF;
     }
 
-    private State getClimateValue(String channelId, Climate climate) {
+    private State getVehicleInfoValue(String channelId, LynkcoDTO dto) {
+        LynkcoDTO.Extras extras = dto.extras;
+        switch (channelId) {
+            case INFO_MODEL:
+                return dto.model.isEmpty() ? UnDefType.UNDEF
+                        : new StringType(LynkcoModel.fromCode(dto.model).getDisplayName());
+            case INFO_PROPULSION:
+                return dto.propulsion.isEmpty() ? UnDefType.UNDEF : new StringType(dto.propulsion);
+            case INFO_YEAR:
+                return extras.year > 0 ? new DecimalType(extras.year) : UnDefType.UNDEF;
+            case INFO_BATTERY_CAPACITY:
+                return extras.batteryCapacity >= 0 ? new QuantityType<>(extras.batteryCapacity, Units.KILOWATT_HOUR)
+                        : UnDefType.UNDEF;
+            case INFO_CHARGER_TYPE:
+                return extras.chargerType.isEmpty() ? UnDefType.UNDEF : new StringType(extras.chargerType);
+            case INFO_TANK_CAPACITY:
+                return extras.tankCapacity >= 0 ? new QuantityType<>(extras.tankCapacity, Units.LITRE)
+                        : UnDefType.UNDEF;
+            case INFO_WEIGHT:
+                return extras.weight >= 0 ? new QuantityType<>(extras.weight, KILOGRAM) : UnDefType.UNDEF;
+            case INFO_TOWING_BRAKED:
+                return extras.towingBraked >= 0 ? new QuantityType<>(extras.towingBraked, KILOGRAM) : UnDefType.UNDEF;
+            case INFO_TOWING_UNBRAKED:
+                return extras.towingUnbraked >= 0 ? new QuantityType<>(extras.towingUnbraked, KILOGRAM)
+                        : UnDefType.UNDEF;
+        }
+        return UnDefType.UNDEF;
+    }
+
+    private State getClimateValue(String channelId, Climate climate, LynkcoDTO.Heaters heaters) {
         switch (channelId) {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(climate.vehicleUpdatedAt);
@@ -782,6 +847,20 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return new QuantityType<>(climate.interiorTemp.temp, CELSIUS);
             case PRECLIMATE_ACTIVE:
                 return OnOffType.from(climate.preClimateActive);
+            case CLIMATE_TARGET_TEMP:
+                return climate.targetTemp >= 0 ? new QuantityType<>(climate.targetTemp, CELSIUS) : UnDefType.UNDEF;
+            case CLIMATE_MAX_TEMP:
+                return climate.maxHvacTemp >= 0 ? new QuantityType<>(climate.maxHvacTemp, CELSIUS) : UnDefType.UNDEF;
+            case CLIMATE_MIN_TEMP:
+                return climate.minHvacTemp >= 0 ? new QuantityType<>(climate.minHvacTemp, CELSIUS) : UnDefType.UNDEF;
+            case CLIMATE_STARTED_AT:
+                return climate.startedAt.isEmpty() ? UnDefType.UNDEF
+                        : new DateTimeType(ZonedDateTime.parse(climate.startedAt));
+            case CLIMATE_END_TIME:
+                return climate.endTime.isEmpty() ? UnDefType.UNDEF
+                        : new DateTimeType(ZonedDateTime.parse(climate.endTime));
+            case CLIMATE_DEFROST_ACTIVE:
+                return OnOffType.from(heaters.defrost);
         }
         return UnDefType.UNDEF;
     }
@@ -900,7 +979,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         return UnDefType.UNDEF;
     }
 
-    private State getVehicleStatusValue(String channelId, Bvs bvs) {
+    private State getVehicleStatusValue(String channelId, Bvs bvs, boolean driving) {
         switch (channelId) {
             case CHANNEL_TIMESTAMP:
                 return new DateTimeType(bvs.engineStatusUpdatedAt);
@@ -910,6 +989,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 return new StringType(bvs.keyStatus);
             case CHANNEL_USAGE_MODE:
                 return new StringType(bvs.usageMode);
+            case CHANNEL_DRIVING:
+                return OnOffType.from(driving);
         }
         return UnDefType.UNDEF;
     }

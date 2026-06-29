@@ -61,11 +61,12 @@
 			<channel-group id="glovebox-control" typeId="glovebox-control"/>
 			<channel-group id="trip" typeId="trip"/>
 			<channel-group id="vehicle-status" typeId="vehicle-status"/>
+			<channel-group id="vehicle-info" typeId="vehicle-info"/>
 		</channel-groups>
 
 		<properties>
 			<property name="vendor">LynkCo</property>
-			<property name="thingTypeVersion">1</property>
+			<property name="thingTypeVersion">2</property>
 		</properties>
 
 		<representation-property>vin</representation-property>
@@ -122,6 +123,7 @@
 				<label>Trunk</label>
 			</channel>
 			<channel id="tank-flap" typeId="tank-flap"/>
+			<channel id="charge-lid" typeId="charge-lid"/>
 			<channel id="locks-status" typeId="lock"/>
 			<channel id="alarm-status" typeId="alarm"/>
 		</channels>
@@ -191,6 +193,7 @@
 		<channels>
 			<channel id="location" typeId="location"/>
 			<channel id="location-trusted" typeId="trust-level"/>
+			<channel id="address" typeId="address"/>
 			<channel id="updated-at" typeId="timestamp">
 				<label>Position Last Update</label>
 			</channel>
@@ -232,6 +235,11 @@
 				<description>Estimated driving range on battery power</description>
 			</channel>
 			<channel id="time-to-full" typeId="charging-time"/>
+			<channel id="charging-power" typeId="charging-power"/>
+			<channel id="avg-consumption" typeId="charging-avg-consumption"/>
+			<channel id="energy-kwh" typeId="charging-energy"/>
+			<channel id="start-stop-status" typeId="charging-start-stop-status"/>
+			<channel id="schedule-enabled" typeId="charge-schedule-enabled"/>
 			<channel id="charger-connection-status" typeId="charger-connection-status"/>
 			<channel id="charger-state" typeId="charger-state"/>
 			<channel id="power-mode" typeId="power-mode"/>
@@ -250,8 +258,26 @@
 			<channel id="temp-interior" typeId="temperature">
 				<label>Interior Temperature</label>
 			</channel>
+			<channel id="target-temp" typeId="temperature">
+				<label>Target Temperature</label>
+			</channel>
+			<channel id="max-temp" typeId="temperature">
+				<label>Max Available HVAC Temperature</label>
+			</channel>
+			<channel id="min-temp" typeId="temperature">
+				<label>Min Available HVAC Temperature</label>
+			</channel>
 			<channel id="preclimate-active" typeId="switch">
 				<label>Preclimate Active</label>
+			</channel>
+			<channel id="defrost-active" typeId="switch">
+				<label>Windshield Defrost Active</label>
+			</channel>
+			<channel id="started-at" typeId="timestamp">
+				<label>Climate Started At</label>
+			</channel>
+			<channel id="end-time" typeId="timestamp">
+				<label>Climate End Time</label>
 			</channel>
 		</channels>
 	</channel-group-type>
@@ -369,6 +395,23 @@
 			<channel id="engine-status" typeId="engine-status"/>
 			<channel id="key-status" typeId="key-status"/>
 			<channel id="usage-mode" typeId="usage-mode"/>
+			<channel id="driving" typeId="driving"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="vehicle-info">
+		<label>Vehicle Information</label>
+		<description>Static vehicle metadata (gateway models only)</description>
+		<channels>
+			<channel id="model" typeId="info-model"/>
+			<channel id="year" typeId="info-year"/>
+			<channel id="propulsion" typeId="info-propulsion"/>
+			<channel id="battery-capacity" typeId="info-battery-capacity"/>
+			<channel id="charger-type" typeId="info-charger-type"/>
+			<channel id="tank-capacity" typeId="info-tank-capacity"/>
+			<channel id="weight" typeId="info-weight"/>
+			<channel id="towing-braked" typeId="info-towing-braked"/>
+			<channel id="towing-unbraked" typeId="info-towing-unbraked"/>
 		</channels>
 	</channel-group-type>
 
@@ -434,6 +477,9 @@
 			</channel>
 			<channel id="seat-rear-left" typeId="heater-control">
 				<label>Rear Left Seat Heater</label>
+			</channel>
+			<channel id="seat-rear-center" typeId="heater-control">
+				<label>Rear Center Seat Heater</label>
 			</channel>
 			<channel id="seat-rear-right" typeId="heater-control">
 				<label>Rear Right Seat Heater</label>
@@ -579,6 +625,14 @@
 		<label>Time to Full Charge</label>
 		<category>Time</category>
 		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charging-power">
+		<item-type>Number:Power</item-type>
+		<label>Charging Power</label>
+		<description>Current charging power</description>
+		<category>Energy</category>
+		<state pattern="%.1f kW" readOnly="true"/>
 	</channel-type>
 
 	<channel-type id="trust-level">
@@ -1022,6 +1076,119 @@
 		<item-type>Switch</item-type>
 		<label>Glovebox Unlock</label>
 		<description>Unlock the glovebox</description>
+	</channel-type>
+
+	<channel-type id="charge-lid">
+		<item-type>Contact</item-type>
+		<label>Charge Lid</label>
+		<description>Charge port lid open/closed status</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="address">
+		<item-type>String</item-type>
+		<label>Address</label>
+		<description>Closest street address of the vehicle location</description>
+		<category>Location</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charging-avg-consumption">
+		<item-type>Number</item-type>
+		<label>Average Power Consumption</label>
+		<description>Average electric power consumption reported by the vehicle</description>
+		<category>Energy</category>
+		<state pattern="%.1f" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charging-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Battery Energy</label>
+		<description>Estimated stored energy (battery capacity × state of charge)</description>
+		<category>Energy</category>
+		<state pattern="%.1f kWh" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charging-start-stop-status">
+		<item-type>String</item-type>
+		<label>Charge Start/Stop Status</label>
+		<description>Reported charge start/stop status</description>
+		<category>Energy</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="charge-schedule-enabled">
+		<item-type>Switch</item-type>
+		<label>Charge Schedule Enabled</label>
+		<description>Whether a scheduled charge is enabled</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="driving">
+		<item-type>Switch</item-type>
+		<label>Driving</label>
+		<description>Whether the vehicle is currently being driven</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-model">
+		<item-type>String</item-type>
+		<label>Model</label>
+		<description>Detected Lynk&amp;Co model</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-year">
+		<item-type>Number</item-type>
+		<label>Model Year</label>
+		<state pattern="%d" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-propulsion">
+		<item-type>String</item-type>
+		<label>Propulsion</label>
+		<description>Propulsion type (BEV/PHEV)</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-battery-capacity">
+		<item-type>Number:Energy</item-type>
+		<label>Battery Capacity</label>
+		<category>Battery</category>
+		<state pattern="%.1f kWh" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-charger-type">
+		<item-type>String</item-type>
+		<label>Charger Type</label>
+		<description>Supported charger connector type</description>
+		<category>Energy</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-tank-capacity">
+		<item-type>Number:Volume</item-type>
+		<label>Fuel Tank Capacity</label>
+		<category>Energy</category>
+		<state pattern="%.1f l" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-weight">
+		<item-type>Number:Mass</item-type>
+		<label>Curb Weight</label>
+		<state pattern="%.0f kg" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-towing-braked">
+		<item-type>Number:Mass</item-type>
+		<label>Towing Capacity (Braked)</label>
+		<state pattern="%.0f kg" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="info-towing-unbraked">
+		<item-type>Number:Mass</item-type>
+		<label>Towing Capacity (Unbraked)</label>
+		<state pattern="%.0f kg" readOnly="true"/>
 	</channel-type>
 
 </thing:thing-descriptions>

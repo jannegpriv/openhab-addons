@@ -31,13 +31,29 @@ public class LynkcoDTO {
     public Heaters heaters = new Heaters();
     // True while the vehicle is being driven (gateway driveModeEnabled); drives faster polling.
     public boolean driveModeActive;
+    // True when the charge-lid is open (gateway only).
+    public boolean chargeLidOpen;
+    // Static vehicle metadata and other gateway-only extras.
+    public Extras extras = new Extras();
 
     public static class Heaters {
         public boolean seatDriver;
         public boolean seatPassenger;
         public boolean seatRearLeft;
+        public boolean seatRearCenter;
         public boolean seatRearRight;
         public boolean steeringWheel;
+        public boolean defrost;
+    }
+
+    public static class Extras {
+        public int year = -1;
+        public double batteryCapacity = -1;
+        public String chargerType = "";
+        public double tankCapacity = -1;
+        public double weight = -1;
+        public double towingBraked = -1;
+        public double towingUnbraked = -1;
     }
 
     public static class RecordDTO {
@@ -78,6 +94,11 @@ public class LynkcoDTO {
         public Temperature exteriorTemp = new Temperature();
         public Temperature interiorTemp = new Temperature();
         public boolean preClimateActive;
+        public double targetTemp = -1;
+        public double maxHvacTemp = -1;
+        public double minHvacTemp = -1;
+        public String startedAt = "";
+        public String endTime = "";
         public String vehicleUpdatedAt = "";
 
         public static class Temperature {
@@ -92,6 +113,11 @@ public class LynkcoDTO {
         public int distanceToEmptyOnBatteryOnly;
         public int timeToFullyCharged;
         public int chargeLimit = -1;
+        public double chargingPower = -1;
+        public double avgConsumption = -1;
+        public double energyKwh = -1;
+        public String startStopStatus = "";
+        public boolean chargeScheduleEnabled;
         public String vehicleUpdatedAt = "";
     }
 
@@ -129,6 +155,7 @@ public class LynkcoDTO {
         public boolean canBeTrusted;
         public double latitude;
         public double longitude;
+        public String address = "";
         public String vehicleUpdatedAt = "";
     }
 

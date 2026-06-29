@@ -187,6 +187,7 @@ public class GatewayPlatform implements VehiclePlatform {
             dto.shadow.vls.windowStatusPassengerRear = contact(doors.windowRearRightStatus, "WINDOW_CLOSED",
                     "WINDOW_OPEN");
             dto.shadow.vls.sunroofOpenStatus = contact(doors.sunroofStatus, "SUNROOF_CLOSED", "SUNROOF_OPEN");
+            dto.chargeLidOpen = "OPEN".equalsIgnoreCase(doors.chargeLidStatus);
         }
 
         if (charge != null && charge.batteryState != null) {
@@ -214,6 +215,16 @@ public class GatewayPlatform implements VehiclePlatform {
             if (bs.chargeLimit != null) {
                 dto.record.electricStatus.chargeLimit = bs.chargeLimit.value;
             }
+            // Charging power is the live rate while charging; when not charging the gateway omits
+            // chargingSpeed, in which case the actual power is 0 kW (rather than unknown).
+            dto.record.electricStatus.chargingPower = bs.chargingSpeed != null ? bs.chargingSpeed.kW : 0;
+            if (bs.powerAverageConsumption != null) {
+                dto.record.electricStatus.avgConsumption = bs.powerAverageConsumption;
+            }
+            dto.record.electricStatus.startStopStatus = bs.startStopStatus != null ? bs.startStopStatus : "";
+            if (bs.chargeSchedule != null) {
+                dto.record.electricStatus.chargeScheduleEnabled = bs.chargeSchedule.enabled;
+            }
         }
 
         if (fuel != null && fuel.fuelState != null) {
@@ -233,6 +244,11 @@ public class GatewayPlatform implements VehiclePlatform {
             dto.record.climate.interiorTemp.temp = climate.interiorTemperature;
             dto.record.climate.preClimateActive = "ACTIVE".equalsIgnoreCase(climate.status);
             dto.record.climate.vehicleUpdatedAt = orNow(climate.updatedAt, now);
+            dto.record.climate.targetTemp = climate.targetTemperature;
+            dto.record.climate.maxHvacTemp = climate.maxAvailableHvacTemperature;
+            dto.record.climate.minHvacTemp = climate.minAvailableHvacTemperature;
+            dto.record.climate.startedAt = climate.startedAt != null ? climate.startedAt : "";
+            dto.record.climate.endTime = climate.endTime != null ? climate.endTime : "";
             if (!climate.engineStatus.isEmpty()) {
                 dto.shadow.bvs.engineStatus = climate.engineStatus;
             }
@@ -240,8 +256,10 @@ public class GatewayPlatform implements VehiclePlatform {
                 dto.heaters.seatDriver = heaterActive(climate.heaters.frontLeftSeat);
                 dto.heaters.seatPassenger = heaterActive(climate.heaters.frontRightSeat);
                 dto.heaters.seatRearLeft = heaterActive(climate.heaters.rearLeftSeat);
+                dto.heaters.seatRearCenter = heaterActive(climate.heaters.rearCenterSeat);
                 dto.heaters.seatRearRight = heaterActive(climate.heaters.rearRightSeat);
                 dto.heaters.steeringWheel = heaterActive(climate.heaters.steeringWheel);
+                dto.heaters.defrost = heaterActive(climate.heaters.windshield);
             }
         }
 
@@ -251,12 +269,28 @@ public class GatewayPlatform implements VehiclePlatform {
             dto.record.position.longitude = vl.coordinates.longitude;
             dto.record.position.canBeTrusted = "AVAILABLE".equalsIgnoreCase(vl.status);
             dto.record.position.vehicleUpdatedAt = orNow(vl.updatedAt, now);
+            dto.record.position.address = vl.longAddress != null ? vl.longAddress : "";
         }
 
         if (metadata != null && metadata.vehicle != null) {
             dto.record.odometer.odometerKm = metadata.vehicle.odometer;
-            dto.model = metadata.vehicle.model;
-            dto.propulsion = metadata.vehicle.propulsionType;
+            dto.model = metadata.vehicle.model != null ? metadata.vehicle.model : "";
+            dto.propulsion = metadata.vehicle.propulsionType != null ? metadata.vehicle.propulsionType : "";
+            dto.extras.year = metadata.vehicle.year;
+            dto.extras.weight = metadata.vehicle.weight;
+            dto.extras.towingBraked = metadata.vehicle.towingCapacityBraked;
+            dto.extras.towingUnbraked = metadata.vehicle.towingCapacityUnbraked;
+        }
+        if (metadata != null && metadata.batteryInfo != null) {
+            dto.extras.batteryCapacity = metadata.batteryInfo.batteryCapacity;
+            dto.extras.chargerType = metadata.batteryInfo.chargerType != null ? metadata.batteryInfo.chargerType : "";
+            if (metadata.batteryInfo.batteryCapacity > 0) {
+                dto.record.electricStatus.energyKwh = metadata.batteryInfo.batteryCapacity
+                        * (dto.record.electricStatus.chargeLevel / 100.0);
+            }
+        }
+        if (metadata != null && metadata.fuelInfo != null) {
+            dto.extras.tankCapacity = metadata.fuelInfo.tankCapacity;
         }
 
         return dto;
