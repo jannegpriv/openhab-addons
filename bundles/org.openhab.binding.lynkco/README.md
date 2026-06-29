@@ -94,6 +94,7 @@ The vehicle thing requires:
 | hood            | Contact  | Hood status (OPEN/CLOSED)             |
 | trunk           | Contact  | Trunk status (OPEN/CLOSED)            |
 | tank-flap       | Contact  | Fuel tank flap status (OPEN/CLOSED)   |
+| charge-lid      | Contact  | Charge-port lid status (OPEN/CLOSED) (Gateway) |
 | locks-status    | Switch   | Central locking status (ON/OFF)       |
 | alarm-status    | Switch   | Alarm system status (ON/OFF)          |
 
@@ -131,8 +132,9 @@ The vehicle thing requires:
 
 | Channel ID       | Type     | Description                    |
 |------------------|----------|--------------------------------|
-| location         | Location | Current vehicle GPS position   |
+| location         | Location | Current vehicle GPS position (6 decimals) |
 | location-trusted | Switch   | Location accuracy indicator    |
+| address          | String   | Nearest street address (Gateway) |
 | updated-at       | DateTime | Position last update timestamp |
 
 ### Battery Status (`battery`)
@@ -155,6 +157,11 @@ The vehicle thing requires:
 | charging-level            | Number:Dimensionless | Current charging level (%)            |
 | range                     | Number:Length        | Estimated driving range on battery    |
 | time-to-full              | Number:Time          | Time remaining until fully charged    |
+| charging-power            | Number:Power         | Current charging power (kW); 0 when not charging (Gateway) |
+| avg-consumption           | Number               | Average power consumption reported by the vehicle (Gateway) |
+| energy-kwh                | Number:Energy        | Stored battery energy (capacity × state of charge) (Gateway) |
+| start-stop-status         | String               | Charge start/stop status (Gateway)    |
+| schedule-enabled          | Switch               | Whether a scheduled charge is enabled (Gateway) |
 | charger-connection-status | String               | Charger connection status             |
 | charger-state             | String               | Current charging state                |
 | power-mode                | String               | Power mode status                     |
@@ -188,7 +195,13 @@ Charger State options:
 | last-update       | DateTime           | Climate status last update timestamp |
 | temp-exterior     | Number:Temperature | External temperature                 |
 | temp-interior     | Number:Temperature | Interior temperature                 |
+| target-temp       | Number:Temperature | Target HVAC temperature (Gateway)    |
+| max-temp          | Number:Temperature | Max available HVAC temperature (Gateway) |
+| min-temp          | Number:Temperature | Min available HVAC temperature (Gateway) |
 | preclimate-active | Switch             | Pre-climatization status             |
+| defrost-active    | Switch             | Windshield defrost active (Gateway)  |
+| started-at        | DateTime           | Climate session start time (Gateway) |
+| end-time          | DateTime           | Climate session end time (Gateway)   |
 
 ### Maintenance Status (`maintenance`)
 
@@ -277,6 +290,23 @@ Tyre pressure status options:
 | engine-status | String   | Engine status                        |
 | key-status    | String   | Key status                           |
 | usage-mode    | String   | Vehicle usage mode                   |
+| driving       | Switch   | ON while the vehicle is being driven (Gateway) |
+
+### Vehicle Information (`vehicle-info`)
+
+Static vehicle metadata (Gateway platform only).
+
+| Channel ID       | Type          | Description                              |
+|------------------|---------------|------------------------------------------|
+| model            | String        | Detected Lynk&Co model                   |
+| year             | Number        | Model year                               |
+| propulsion       | String        | Propulsion type (BEV/PHEV)               |
+| battery-capacity | Number:Energy | Battery capacity (kWh)                   |
+| charger-type     | String        | Supported charger connector type (e.g. CCS2) |
+| tank-capacity    | Number:Volume | Fuel tank capacity (litres)              |
+| weight           | Number:Mass   | Curb weight (kg)                         |
+| towing-braked    | Number:Mass   | Towing capacity, braked (kg)             |
+| towing-unbraked  | Number:Mass   | Towing capacity, unbraked (kg)           |
 
 ### Control Channels
 
@@ -332,6 +362,7 @@ The following control groups are only available on the **Gateway** platform (Lyn
 | seat-driver   | Switch | Driver seat heater                 |
 | seat-passenger| Switch | Passenger seat heater              |
 | seat-rear-left| Switch | Rear left seat heater (08)         |
+| seat-rear-center| Switch | Rear center seat heater (08)     |
 | seat-rear-right| Switch| Rear right seat heater (08)        |
 | steering-wheel| Switch | Steering wheel heater              |
 
