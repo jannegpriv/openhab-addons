@@ -192,6 +192,12 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 }
                 break;
 
+            case GROUP_CHARGING_CONTROL + "#" + CHANNEL_CHARGING_START_STOP:
+                if (command instanceof OnOffType) {
+                    actionCharging(command == OnOffType.ON);
+                }
+                break;
+
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_DRIVER:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_PASSENGER:
             case GROUP_HEATERS_CONTROL + "#" + CHANNEL_HEATER_SEAT_REAR_LEFT:
@@ -354,6 +360,36 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
     }
 
+    public void actionCharging(boolean start) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            if (start) {
+                api.startCharging(config.vin);
+            } else {
+                api.stopCharging(config.vin);
+            }
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to control charging: {}", e.getMessage());
+        }
+    }
+
+    public void actionLockGlovebox(String pin) {
+        VehiclePlatform api = getPlatform();
+        if (api == null) {
+            logger.debug("api is null");
+            return;
+        }
+        try {
+            api.lockGlovebox(config.vin, pin);
+        } catch (LynkcoApiException e) {
+            logger.warn("Failed to lock glovebox: {}", e.getMessage());
+        }
+    }
+
     public void actionHeater(String channelId, boolean on) {
         VehiclePlatform api = getPlatform();
         if (api == null) {
@@ -511,7 +547,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case GROUP_CHARGING:
                 return getChargingValue(channelId, dto.record.electricStatus, dto.shadow.evs);
             case GROUP_CHARGING_CONTROL:
-                return getChargingControlValue(channelId, dto.record.electricStatus);
+                return getChargingControlValue(channelId, dto.record.electricStatus, dto.shadow.evs);
             case GROUP_HEATERS_CONTROL:
                 return getHeaterValue(channelId, dto.heaters);
             case GROUP_VEHICLE_INFO:
@@ -831,10 +867,13 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         return UnDefType.UNDEF;
     }
 
-    private State getChargingControlValue(String channelId, ElectricStatus electricStatus) {
-        if (CHANNEL_CHARGE_LIMIT.equals(channelId)) {
-            return electricStatus.chargeLimit >= 0 ? new QuantityType<>(electricStatus.chargeLimit, Units.PERCENT)
-                    : UnDefType.UNDEF;
+    private State getChargingControlValue(String channelId, ElectricStatus electricStatus, Evs evs) {
+        switch (channelId) {
+            case CHANNEL_CHARGE_LIMIT:
+                return electricStatus.chargeLimit >= 0 ? new QuantityType<>(electricStatus.chargeLimit, Units.PERCENT)
+                        : UnDefType.UNDEF;
+            case CHANNEL_CHARGING_START_STOP:
+                return OnOffType.from(evs.chargerStatusData.chargerState == ChargerState.CHARGER_STATE_CHARGN);
         }
         return UnDefType.UNDEF;
     }

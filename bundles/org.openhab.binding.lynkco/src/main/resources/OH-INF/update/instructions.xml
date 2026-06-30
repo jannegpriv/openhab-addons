@@ -98,6 +98,13 @@
 				<type>lynkco:target-temp-control</type>
 			</add-channel>
 		</instruction-set>
+
+		<instruction-set targetVersion="4">
+			<!-- Start/stop charging -->
+			<add-channel id="charging" groupIds="charging-control">
+				<type>lynkco:charging-control</type>
+			</add-channel>
+		</instruction-set>
 	</thing-type>
 
 </update:update-descriptions>

@@ -121,4 +121,34 @@ public class LynkcoActions implements ThingActions {
             logger.warn("Lynkco Action service ThingHandler is null!");
         }
     }
+
+    @RuleAction(label = "Start Charging", description = "Start charging the vehicle (gateway models)")
+    public void startCharging() {
+        LynkcoVehicleHandler handler = this.handler;
+        if (handler != null) {
+            handler.actionCharging(true);
+        } else {
+            logger.warn("Lynkco Action service ThingHandler is null!");
+        }
+    }
+
+    @RuleAction(label = "Stop Charging", description = "Stop charging the vehicle (gateway models)")
+    public void stopCharging() {
+        LynkcoVehicleHandler handler = this.handler;
+        if (handler != null) {
+            handler.actionCharging(false);
+        } else {
+            logger.warn("Lynkco Action service ThingHandler is null!");
+        }
+    }
+
+    @RuleAction(label = "Lock Glovebox", description = "Lock the glovebox with a PIN (gateway models)")
+    public void lockGlovebox(@ActionInput(name = "pin", label = "PIN", description = "4-digit PIN") String pin) {
+        LynkcoVehicleHandler handler = this.handler;
+        if (handler != null) {
+            handler.actionLockGlovebox(pin);
+        } else {
+            logger.warn("Lynkco Action service ThingHandler is null!");
+        }
+    }
 }

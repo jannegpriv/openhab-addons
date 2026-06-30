@@ -420,6 +420,21 @@ public class GatewayPlatform implements VehiclePlatform {
         postCommand(vin, "glovebox_unlock", null);
     }
 
+    @Override
+    public void lockGlovebox(String vin, String pin) throws LynkcoApiException {
+        postCommand(vin, "glovebox_set_password", "{\"password\":\"" + pin + "\"}");
+    }
+
+    @Override
+    public void startCharging(String vin) throws LynkcoApiException {
+        postCommand(vin, "charge_start", null);
+    }
+
+    @Override
+    public void stopCharging(String vin) throws LynkcoApiException {
+        postCommand(vin, "charge_stop", null);
+    }
+
     // --- HTTP / signing helpers -------------------------------------------------------------
 
     private String toJsonArray(List<String> values) {

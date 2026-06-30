@@ -357,6 +357,7 @@ The following control groups are only available on the **Gateway** platform (Lyn
 | Channel ID   | Type                | Description                        |
 |--------------|---------------------|------------------------------------|
 | charge-limit | Number:Dimensionless| Target state-of-charge limit (%)   |
+| charging     | Switch              | Start (ON) / stop (OFF) charging; reflects whether the car is currently charging |
 
 #### Heater Control (`heaters-control`)
 
@@ -393,6 +394,9 @@ stopEngine()                                  // Stop engine
 lockDoors()                                   // Lock all doors
 unlockDoors()                                 // Unlock all doors
 honkBlink(boolean honk, boolean blink)        // Control horn and lights
+startCharging()                               // Start charging (gateway models)
+stopCharging()                                // Stop charging (gateway models)
+lockGlovebox(String pin)                      // Lock the glovebox with a 4-digit PIN (gateway models)
 ```
 
 ## Configuration Examples

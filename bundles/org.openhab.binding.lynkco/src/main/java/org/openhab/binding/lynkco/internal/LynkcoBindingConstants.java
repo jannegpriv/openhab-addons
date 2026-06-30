@@ -240,6 +240,7 @@ public class LynkcoBindingConstants {
     // Gateway-only control groups/channels (Lynk&Co 01 (2025), 02, 08)
     public static final String GROUP_CHARGING_CONTROL = "charging-control";
     public static final String CHANNEL_CHARGE_LIMIT = "charge-limit";
+    public static final String CHANNEL_CHARGING_START_STOP = "charging";
 
     public static final String GROUP_HEATERS_CONTROL = "heaters-control";
     public static final String CHANNEL_HEATER_SEAT_DRIVER = "seat-driver";

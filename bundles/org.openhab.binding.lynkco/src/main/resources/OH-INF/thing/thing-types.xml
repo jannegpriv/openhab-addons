@@ -66,7 +66,7 @@
 
 		<properties>
 			<property name="vendor">LynkCo</property>
-			<property name="thingTypeVersion">3</property>
+			<property name="thingTypeVersion">4</property>
 		</properties>
 
 		<representation-property>vin</representation-property>
@@ -463,6 +463,7 @@
 		<description>Control charging behaviour (gateway models only)</description>
 		<channels>
 			<channel id="charge-limit" typeId="charge-limit-control"/>
+			<channel id="charging" typeId="charging-control"/>
 		</channels>
 	</channel-group-type>
 
@@ -1067,6 +1068,13 @@
 		<description>Target state of charge limit in percent</description>
 		<category>Energy</category>
 		<state min="0" max="100" step="1" pattern="%d %%"/>
+	</channel-type>
+
+	<channel-type id="charging-control">
+		<item-type>Switch</item-type>
+		<label>Charging</label>
+		<description>Start (ON) or stop (OFF) charging</description>
+		<category>Energy</category>
 	</channel-type>
 
 	<channel-type id="heater-control">

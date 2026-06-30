@@ -112,6 +112,18 @@ public interface VehiclePlatform {
         throw unsupported("unlockGlovebox");
     }
 
+    default void lockGlovebox(String vin, String pin) throws LynkcoApiException {
+        throw unsupported("lockGlovebox");
+    }
+
+    default void startCharging(String vin) throws LynkcoApiException {
+        throw unsupported("startCharging");
+    }
+
+    default void stopCharging(String vin) throws LynkcoApiException {
+        throw unsupported("stopCharging");
+    }
+
     private static LynkcoApiException unsupported(String operation) {
         return new LynkcoApiException(operation + " is not supported on this vehicle platform",
                 LynkcoApiException.ErrorType.UNSUPPORTED);
