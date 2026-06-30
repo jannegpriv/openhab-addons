@@ -108,6 +108,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private long currentIntervalSeconds = -1;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
+    private final List<ScheduledFuture<?>> commandRefreshes = new ArrayList<>();
 
     public LynkcoVehicleHandler(Thing thing) {
         super(thing);
@@ -141,23 +142,24 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 }
                 break;
 
+            // Flash/honk are fire-and-forget: they change no polled state, so skip the refresh.
             case GROUP_LIGHTS_CONTROL + "#" + CHANNEL_LIGHT_FLASH:
                 if (command instanceof OnOffType) {
                     actionHonkBlink(false, command == OnOffType.ON);
                 }
-                break;
+                return;
 
             case GROUP_HORN_CONTROL + "#" + CHANNEL_HORN:
                 if (command instanceof OnOffType) {
                     actionHonkBlink(command == OnOffType.ON, false);
                 }
-                break;
+                return;
 
             case GROUP_HORN_CONTROL + "#" + CHANNEL_HONK_FLASH:
                 if (command == OnOffType.ON) {
                     actionHonkBlink(true, true);
                 }
-                break;
+                return;
 
             case GROUP_CLIMATE_CONTROL + "#" + CHANNEL_VENTILATE:
                 if (command instanceof OnOffType) {
@@ -221,7 +223,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 }
                 break;
         }
-        updateNow();
+        scheduleCommandRefresh();
     }
 
     @Override
@@ -258,6 +260,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     @Override
     public void dispose() {
         stopAutomaticRefresh();
+        commandRefreshes.forEach(f -> f.cancel(true));
+        commandRefreshes.clear();
     }
 
     public void actionClimate(boolean start, int climateLevel, int durationInMinutes) {
@@ -474,9 +478,10 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             }
             LynkcoDTO vehicleData = api.fetchVehicleData(config.vin);
             update(vehicleData);
-            // Poll every 60 s while driving (for live position), revert to the configured interval
-            // when stopped.
-            long desired = vehicleData.driveModeActive ? DRIVING_INTERVAL_SECONDS : config.refresh * 60L;
+            // Poll every 60 s while driving (for live position) or while pre-conditioning is active
+            // (to track climate state); revert to the configured interval otherwise.
+            boolean fastPoll = vehicleData.driveModeActive || vehicleData.record.climate.preClimateActive;
+            long desired = fastPoll ? DRIVING_INTERVAL_SECONDS : config.refresh * 60L;
             if (desired != currentIntervalSeconds) {
                 scheduleRefresh(desired);
             }
@@ -514,6 +519,18 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             instantUpdate = scheduler.schedule(this::pollVehicleData, 0, TimeUnit.SECONDS);
         } else {
             logger.debug("Already waiting for scheduled refresh");
+        }
+    }
+
+    // Delays (seconds) at which to re-poll after a state-changing command, giving the car time to
+    // process it (mirrors the reference integration's 3s/5s/10s retry, here as cumulative offsets).
+    private static final long[] COMMAND_REFRESH_DELAYS = { 3, 8, 18 };
+
+    private synchronized void scheduleCommandRefresh() {
+        commandRefreshes.forEach(f -> f.cancel(false));
+        commandRefreshes.clear();
+        for (long delay : COMMAND_REFRESH_DELAYS) {
+            commandRefreshes.add(scheduler.schedule(this::pollVehicleData, delay, TimeUnit.SECONDS));
         }
     }
 
