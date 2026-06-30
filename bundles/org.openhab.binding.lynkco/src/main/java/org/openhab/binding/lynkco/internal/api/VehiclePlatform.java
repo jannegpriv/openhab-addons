@@ -51,7 +51,8 @@ public interface VehiclePlatform {
 
     // --- Climate / engine -------------------------------------------------------------------
 
-    void startClimate(String vin, int climateLevel, int durationInMinutes) throws LynkcoApiException;
+    void startClimate(String vin, int targetTempCelsius, int climateLevel, int durationInMinutes)
+            throws LynkcoApiException;
 
     void stopClimate(String vin) throws LynkcoApiException;
 

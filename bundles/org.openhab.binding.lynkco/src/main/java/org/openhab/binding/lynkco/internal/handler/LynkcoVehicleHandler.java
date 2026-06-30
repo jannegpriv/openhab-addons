@@ -100,6 +100,11 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private LynkcoVehicleConfiguration config = new LynkcoVehicleConfiguration();
     private Platform platform = Platform.GATEWAY;
     private boolean channelsAdjusted = false;
+    // Target temperature (°C, 16-28) sent to the gateway when starting pre-conditioning. Settable via
+    // the climate-control#target-temp channel; initialised once from the vehicle's reported value.
+    private int targetTempCelsius = 22;
+    private boolean targetTempInitialized = false;
+    private boolean preClimateActive = false;
     private long currentIntervalSeconds = -1;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
@@ -157,6 +162,25 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
             case GROUP_CLIMATE_CONTROL + "#" + CHANNEL_VENTILATE:
                 if (command instanceof OnOffType) {
                     actionVentilate(command == OnOffType.ON);
+                }
+                break;
+
+            case GROUP_CLIMATE_CONTROL + "#" + CLIMATE_TARGET_TEMP:
+                Integer temp = null;
+                if (command instanceof QuantityType<?> quantity) {
+                    temp = quantity.intValue();
+                } else if (command instanceof DecimalType decimal) {
+                    temp = decimal.intValue();
+                }
+                if (temp != null) {
+                    // Clamp to the gateway-supported range and remember it for the next pre-conditioning
+                    // start; if pre-conditioning is already running, re-apply it with the new target.
+                    targetTempCelsius = Math.max(16, Math.min(28, temp));
+                    targetTempInitialized = true;
+                    updateState(channelUID, new QuantityType<>(targetTempCelsius, CELSIUS));
+                    if (preClimateActive) {
+                        actionClimate(true, 2, 30);
+                    }
                 }
                 break;
 
@@ -238,7 +262,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         }
         try {
             if (start) {
-                api.startClimate(config.vin, climateLevel, durationInMinutes);
+                api.startClimate(config.vin, targetTempCelsius, climateLevel, durationInMinutes);
             } else {
                 api.stopClimate(config.vin);
             }
@@ -519,6 +543,13 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private void update(@Nullable LynkcoDTO dto) {
         if (dto != null) {
             adjustChannelsForModel(dto);
+            // Track pre-conditioning state (for live re-apply of a new target temp) and seed the
+            // settable target-temp setpoint once from the vehicle's reported value.
+            preClimateActive = dto.record.climate.preClimateActive;
+            if (!targetTempInitialized && dto.record.climate.targetTemp >= 16 && dto.record.climate.targetTemp <= 28) {
+                targetTempCelsius = (int) Math.round(dto.record.climate.targetTemp);
+                targetTempInitialized = true;
+            }
             getThing().getChannels().stream().map(Channel::getUID).filter(channelUID -> isLinked(channelUID))
                     .forEach(channelUID -> {
                         String groupId = channelUID.getGroupId();
@@ -869,6 +900,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         switch (channelId) {
             case CHANNEL_PRECLIMATE:
                 return OnOffType.from(climate.preClimateActive);
+            case CLIMATE_TARGET_TEMP:
+                return new QuantityType<>(targetTempCelsius, CELSIUS);
         }
         return UnDefType.UNDEF;
     }

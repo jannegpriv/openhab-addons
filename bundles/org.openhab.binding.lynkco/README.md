@@ -343,11 +343,14 @@ Static vehicle metadata (Gateway platform only).
 
 The following control groups are only available on the **Gateway** platform (Lynk&Co 01 (2025), 02, 08):
 
-#### Climate Control (`climate-control`) - additional channel
+#### Climate Control (`climate-control`) - additional channels
 
-| Channel ID | Type   | Description                  |
-|------------|--------|------------------------------|
-| ventilate  | Switch | Start/stop cabin ventilation |
+| Channel ID  | Type               | Description                                                              |
+|-------------|--------------------|-------------------------------------------------------------------------|
+| ventilate   | Switch             | Start/stop cabin ventilation (no temperature — just airs out the cabin) |
+| target-temp | Number:Temperature | Target cabin temperature for pre-conditioning (16–28 °C). Used when `preclimate` is switched on; changing it while pre-conditioning is running re-applies it live. |
+
+> **Förvärmning vs. Ventilation:** `preclimate` runs the heating/AC to reach the `target-temp` set point; `ventilate` only runs the fans to exchange cabin air (no heating/cooling, no temperature).
 
 #### Charging Control (`charging-control`)
 

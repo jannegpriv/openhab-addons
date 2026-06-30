@@ -91,6 +91,13 @@
 				<type>lynkco:info-towing-unbraked</type>
 			</add-channel>
 		</instruction-set>
+
+		<instruction-set targetVersion="3">
+			<!-- Settable target temperature for pre-conditioning -->
+			<add-channel id="target-temp" groupIds="climate-control">
+				<type>lynkco:target-temp-control</type>
+			</add-channel>
+		</instruction-set>
 	</thing-type>
 
 </update:update-descriptions>

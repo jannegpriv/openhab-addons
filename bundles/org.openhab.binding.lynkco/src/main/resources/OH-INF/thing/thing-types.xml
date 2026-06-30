@@ -66,7 +66,7 @@
 
 		<properties>
 			<property name="vendor">LynkCo</property>
-			<property name="thingTypeVersion">2</property>
+			<property name="thingTypeVersion">3</property>
 		</properties>
 
 		<representation-property>vin</representation-property>
@@ -421,6 +421,7 @@
 		<channels>
 			<channel id="preclimate" typeId="preclimate-control"/>
 			<channel id="ventilate" typeId="ventilate-control"/>
+			<channel id="target-temp" typeId="target-temp-control"/>
 		</channels>
 	</channel-group-type>
 
@@ -1050,6 +1051,14 @@
 		<item-type>Switch</item-type>
 		<label>Ventilation Control</label>
 		<description>Start/stop cabin ventilation</description>
+	</channel-type>
+
+	<channel-type id="target-temp-control">
+		<item-type>Number:Temperature</item-type>
+		<label>Target Temperature</label>
+		<description>Target cabin temperature used when pre-conditioning is started (gateway models)</description>
+		<category>Temperature</category>
+		<state min="16" max="28" step="1" pattern="%.0f °C"/>
 	</channel-type>
 
 	<channel-type id="charge-limit-control">

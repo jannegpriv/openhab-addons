@@ -64,7 +64,9 @@ public class CccPlatform implements VehiclePlatform {
     }
 
     @Override
-    public void startClimate(String vin, int climateLevel, int durationInMinutes) throws LynkcoApiException {
+    public void startClimate(String vin, int targetTempCelsius, int climateLevel, int durationInMinutes)
+            throws LynkcoApiException {
+        // The legacy CCC platform has no target-temperature parameter; targetTempCelsius is ignored.
         String endpoint = String.format(VEHICLE_CONTROL_URL + "/climate", vin);
 
         JsonObject data = new JsonObject();
