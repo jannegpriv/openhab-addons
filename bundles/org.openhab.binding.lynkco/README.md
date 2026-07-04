@@ -137,6 +137,12 @@ The vehicle thing requires:
 | address          | String   | Nearest street address (Gateway) |
 | updated-at       | DateTime | Position last update timestamp |
 
+> **Note on live position:** while the car is being driven it keeps reporting its last known
+> location and only sends an updated position once it stops (on LynkOS 1.4.0+ the car reports
+> location only when parked). This is a limitation of the Lynk&Co telematics, not the binding —
+> polling faster does not help, as there is no fresh coordinate to fetch mid-drive. The position
+> therefore updates shortly after you park at your destination.
+
 ### Battery Status (`battery`)
 
 | Channel ID   | Type                     | Description                          |
