@@ -76,6 +76,7 @@ The vehicle thing requires:
 |-----------|------------------------------------------------------------------------|
 | vin       | Vehicle Identification Number (VIN) from your Lynk&Co app              |
 | refresh   | Refresh interval in minutes (default: 5, minimum: 5, maximum: 65535)   |
+| forceLocationRefresh | Ask the car to report a fresh position on every poll (default: `true`). Wakes the vehicle telematics each poll; set to `false` if concerned about 12V battery drain. Gateway platform only. |
 | platform  | Optional backend override: `GATEWAY` (01 2025 / 02 / 08) or `CCC` (pre-2025 01). Leave empty for auto-detection. |
 
 **Important:** You must configure the VIN in the bridge thing for vehicle discovery to work.
@@ -137,11 +138,12 @@ The vehicle thing requires:
 | address          | String   | Nearest street address (Gateway) |
 | updated-at       | DateTime | Position last update timestamp |
 
-> **Note on live position:** while the car is being driven it keeps reporting its last known
-> location and only sends an updated position once it stops (on LynkOS 1.4.0+ the car reports
-> location only when parked). This is a limitation of the Lynk&Co telematics, not the binding —
-> polling faster does not help, as there is no fresh coordinate to fetch mid-drive. The position
-> therefore updates shortly after you park at your destination.
+> **Note on live position:** on its own the car keeps reporting its last known location while
+> being driven and only sends an updated position once it stops (on LynkOS 1.4.0+ the car reports
+> location only when parked). With `forceLocationRefresh` enabled (the default) the binding sends
+> a `request_location` command before each poll, asking the car to push its current position — so
+> the location channel updates on every poll, also mid-drive. With it disabled the position only
+> updates shortly after you park at your destination.
 
 ### Battery Status (`battery`)
 

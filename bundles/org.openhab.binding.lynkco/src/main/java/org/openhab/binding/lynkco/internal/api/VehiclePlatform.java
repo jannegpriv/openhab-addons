@@ -124,6 +124,10 @@ public interface VehiclePlatform {
         throw unsupported("stopCharging");
     }
 
+    default void requestLocationUpdate(String vin) throws LynkcoApiException {
+        throw unsupported("requestLocationUpdate");
+    }
+
     private static LynkcoApiException unsupported(String operation) {
         return new LynkcoApiException(operation + " is not supported on this vehicle platform",
                 LynkcoApiException.ErrorType.UNSUPPORTED);

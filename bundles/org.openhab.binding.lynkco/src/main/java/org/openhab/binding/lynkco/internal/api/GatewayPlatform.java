@@ -435,6 +435,11 @@ public class GatewayPlatform implements VehiclePlatform {
         postCommand(vin, "charge_stop", null);
     }
 
+    @Override
+    public void requestLocationUpdate(String vin) throws LynkcoApiException {
+        postCommand(vin, "request_location", null);
+    }
+
     // --- HTTP / signing helpers -------------------------------------------------------------
 
     private String toJsonArray(List<String> values) {

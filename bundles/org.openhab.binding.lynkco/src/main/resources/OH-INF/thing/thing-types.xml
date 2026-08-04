@@ -81,6 +81,14 @@
 				<description>thing-type.config.lynkco.api.refresh.description</description>
 				<default>5</default>
 			</parameter>
+			<parameter name="forceLocationRefresh" type="boolean" required="false">
+				<label>Force Location Refresh</label>
+				<description>Ask the car to report a fresh position on every poll. Wakes the vehicle telematics each
+					poll; disable if
+					concerned about 12V battery drain.</description>
+				<default>true</default>
+				<advanced>true</advanced>
+			</parameter>
 			<parameter name="platform" type="text" required="false">
 				<label>Backend Platform</label>
 				<description>Override the backend platform. Leave empty for auto-detection (defaults to the

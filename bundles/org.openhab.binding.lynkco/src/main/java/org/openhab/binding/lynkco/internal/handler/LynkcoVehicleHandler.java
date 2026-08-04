@@ -106,6 +106,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
     private boolean targetTempInitialized = false;
     private boolean preClimateActive = false;
     private long currentIntervalSeconds = -1;
+    private boolean locationRefreshUnavailable = false;
     private @Nullable ScheduledFuture<?> refreshJob;
     private @Nullable ScheduledFuture<?> instantUpdate;
     private final List<ScheduledFuture<?>> commandRefreshes = new ArrayList<>();
@@ -468,6 +469,8 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
 
     // Faster polling interval (seconds) used while the vehicle is being driven.
     private static final long DRIVING_INTERVAL_SECONDS = 60;
+    // Time (ms) for the car to push a fresh position after request_location before we fetch state.
+    private static final long LOCATION_PUSH_WAIT_MILLIS = 6000;
 
     private void pollVehicleData() {
         try {
@@ -476,6 +479,7 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "Bridge is offline.");
                 return;
             }
+            requestFreshLocation(api);
             LynkcoDTO vehicleData = api.fetchVehicleData(config.vin);
             update(vehicleData);
             // Poll every 60 s while driving (for live position) or while pre-conditioning is active
@@ -488,6 +492,34 @@ public class LynkcoVehicleHandler extends BaseThingHandler {
         } catch (Exception e) {
             logger.debug("Error polling data for VIN {}", config.vin, e);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error polling vehicle data.");
+        }
+    }
+
+    /**
+     * Ask the car to push a fresh position before fetching state, so the location updates on every
+     * poll instead of only when the car is parked. Rejections (endpoint not supported for this
+     * model) disable further attempts until the handler is re-initialized.
+     */
+    private void requestFreshLocation(VehiclePlatform api) {
+        if (!config.forceLocationRefresh || locationRefreshUnavailable) {
+            return;
+        }
+        try {
+            api.requestLocationUpdate(config.vin);
+            Thread.sleep(LOCATION_PUSH_WAIT_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (LynkcoApiException e) {
+            switch (e.getErrorType()) {
+                case UNSUPPORTED:
+                case API_ERROR:
+                    locationRefreshUnavailable = true;
+                    logger.warn("Location refresh not accepted for VIN {} ({}), disabling until next initialization",
+                            config.vin, e.getMessage());
+                    break;
+                default:
+                    logger.debug("Location refresh failed for VIN {}: {}", config.vin, e.getMessage());
+            }
         }
     }
 
