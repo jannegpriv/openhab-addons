@@ -1121,9 +1121,9 @@
 	<channel-type id="charging-avg-consumption">
 		<item-type>Number</item-type>
 		<label>Average Power Consumption</label>
-		<description>Average electric power consumption reported by the vehicle</description>
+		<description>Average electric power consumption reported by the vehicle (kWh/100km, as shown in the app)</description>
 		<category>Energy</category>
-		<state pattern="%.1f" readOnly="true"/>
+		<state pattern="%.1f kWh/100km" readOnly="true"/>
 	</channel-type>
 
 	<channel-type id="charging-energy">
