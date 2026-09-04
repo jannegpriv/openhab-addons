@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="modbus"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="sigenergy-plant">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="serial"/>
+			<bridge-type-ref id="tcp"/>
+		</supported-bridge-type-refs>
+
+		<label>Sigenergy Plant</label>
+		<description>Plant-level monitoring of a Sigenergy SigenStor system via Modbus (read-only).</description>
+		<category>Inverter</category>
+		<channel-groups>
+			<channel-group id="overview" typeId="sigenergy-overview"/>
+			<channel-group id="grid" typeId="sigenergy-grid"/>
+			<channel-group id="battery" typeId="sigenergy-battery"/>
+			<channel-group id="energy" typeId="sigenergy-energy"/>
+		</channel-groups>
+		<config-description-ref uri="thing-type:sigenergy:plant"/>
+	</thing-type>
+
+	<thing-type id="sigenergy-evac">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="serial"/>
+			<bridge-type-ref id="tcp"/>
+		</supported-bridge-type-refs>
+
+		<label>Sigen EV AC Charger</label>
+		<description>Read-only monitoring of a Sigen EVAC charger through the plant's Modbus TCP endpoint. The charger's
+			own
+			Modbus unit ID (1-246) must be configured in the mySigen app.</description>
+		<category>WallSwitch</category>
+		<channel-groups>
+			<channel-group id="status" typeId="sigenergy-evac-status"/>
+			<channel-group id="charging" typeId="sigenergy-evac-charging"/>
+			<channel-group id="ratings" typeId="sigenergy-evac-ratings"/>
+		</channel-groups>
+		<config-description-ref uri="thing-type:sigenergy:evac"/>
+	</thing-type>
+
+	<channel-group-type id="sigenergy-evac-status">
+		<label>Status</label>
+		<channels>
+			<channel id="system-state" typeId="sigenergy-evac-system-state"/>
+			<channel id="raw-state" typeId="sigenergy-evac-raw-state"/>
+			<channel id="alarm-active" typeId="sigenergy-evac-alarm-active"/>
+			<channel id="alarm-summary" typeId="sigenergy-evac-alarm-summary"/>
+			<channel id="alarm-mask-1" typeId="sigenergy-evac-alarm-mask-1"/>
+			<channel id="alarm-mask-2" typeId="sigenergy-evac-alarm-mask-2"/>
+			<channel id="alarm-mask-3" typeId="sigenergy-evac-alarm-mask-3"/>
+			<channel id="last-successful-update" typeId="sigenergy-last-update"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-evac-charging">
+		<label>Charging</label>
+		<channels>
+			<channel id="total-energy" typeId="sigenergy-evac-total-energy"/>
+			<channel id="charging-power" typeId="sigenergy-evac-charging-power"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-evac-ratings">
+		<label>Ratings</label>
+		<channels>
+			<channel id="rated-power" typeId="sigenergy-evac-rated-power"/>
+			<channel id="rated-current" typeId="sigenergy-evac-rated-current"/>
+			<channel id="rated-voltage" typeId="sigenergy-evac-rated-voltage"/>
+			<channel id="input-breaker-current" typeId="sigenergy-evac-input-breaker-current"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-overview">
+		<label>Overview</label>
+		<channels>
+			<channel id="ems-mode" typeId="sigenergy-ems-mode"/>
+			<channel id="on-off-grid-status" typeId="sigenergy-on-off-grid-status"/>
+			<channel id="plant-running-state" typeId="sigenergy-plant-running-state"/>
+			<channel id="plant-power" typeId="sigenergy-plant-power"/>
+			<channel id="pv-power" typeId="sigenergy-pv-power"/>
+			<channel id="load-power" typeId="sigenergy-load-power"/>
+			<channel id="general-load-power" typeId="sigenergy-general-load-power"/>
+			<channel id="last-successful-update" typeId="sigenergy-last-update"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-grid">
+		<label>Grid</label>
+		<channels>
+			<channel id="grid-sensor-status" typeId="sigenergy-grid-sensor-status"/>
+			<channel id="grid-power" typeId="sigenergy-grid-power"/>
+			<channel id="grid-phase-a-power" typeId="sigenergy-grid-phase-a-power"/>
+			<channel id="grid-phase-b-power" typeId="sigenergy-grid-phase-b-power"/>
+			<channel id="grid-phase-c-power" typeId="sigenergy-grid-phase-c-power"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-battery">
+		<label>Battery</label>
+		<category>Battery</category>
+		<channels>
+			<channel id="battery-soc" typeId="sigenergy-battery-soc"/>
+			<channel id="battery-power" typeId="sigenergy-battery-power"/>
+			<channel id="battery-soh" typeId="sigenergy-battery-soh"/>
+			<channel id="charge-cutoff-soc" typeId="sigenergy-charge-cutoff-soc"/>
+			<channel id="discharge-cutoff-soc" typeId="sigenergy-discharge-cutoff-soc"/>
+			<channel id="cell-temperature" typeId="sigenergy-cell-temperature"/>
+			<channel id="rated-capacity" typeId="sigenergy-rated-capacity"/>
+			<channel id="available-charge-capacity" typeId="sigenergy-available-charge-capacity"/>
+			<channel id="available-discharge-capacity" typeId="sigenergy-available-discharge-capacity"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-energy">
+		<label>Energy</label>
+		<category>Energy</category>
+		<channels>
+			<channel id="pv-generation-today" typeId="sigenergy-pv-generation-today"/>
+			<channel id="pv-generation-yesterday" typeId="sigenergy-pv-generation-yesterday"/>
+			<channel id="load-consumption-today" typeId="sigenergy-load-consumption-today"/>
+			<channel id="total-pv-generation" typeId="sigenergy-total-pv-generation"/>
+			<channel id="total-load-consumption" typeId="sigenergy-total-load-consumption"/>
+			<channel id="total-battery-charged-energy" typeId="sigenergy-total-battery-charged-energy"/>
+			<channel id="total-battery-discharged-energy" typeId="sigenergy-total-battery-discharged-energy"/>
+			<channel id="total-imported-energy" typeId="sigenergy-total-imported-energy"/>
+			<channel id="total-exported-energy" typeId="sigenergy-total-exported-energy"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-type id="sigenergy-evac-system-state">
+		<item-type>String</item-type>
+		<label>Charger System State</label>
+		<description>IEC 61851-1 system state of the charger (register 32000, Appendix 7). Unknown values are shown as
+			"UNKNOWN_n".</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="SYSTEM_INIT">System init</option>
+				<option value="A1_A2">State A1/A2</option>
+				<option value="B1">State B1</option>
+				<option value="B2">State B2</option>
+				<option value="C1">State C1</option>
+				<option value="C2">State C2</option>
+				<option value="F">State F</option>
+				<option value="E">State E</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-evac-raw-state" advanced="true">
+		<item-type>Number</item-type>
+		<label>Charger Raw State Code</label>
+		<description>Raw value of register 32000, for diagnostics.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-alarm-active">
+		<item-type>Switch</item-type>
+		<label>Charger Alarm Active</label>
+		<description>ON if any documented alarm bit of registers 32012-32014 is set.</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-alarm-summary">
+		<item-type>String</item-type>
+		<label>Charger Alarm Summary</label>
+		<description>Active documented alarms as canonical identifiers, or NONE.</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-alarm-mask-1" advanced="true">
+		<item-type>Number</item-type>
+		<label>Charger Alarm Mask 1</label>
+		<description>Raw alarm bit mask, register 32012.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-alarm-mask-2" advanced="true">
+		<item-type>Number</item-type>
+		<label>Charger Alarm Mask 2</label>
+		<description>Raw alarm bit mask, register 32013.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-alarm-mask-3" advanced="true">
+		<item-type>Number</item-type>
+		<label>Charger Alarm Mask 3</label>
+		<description>Raw alarm bit mask, register 32014.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-total-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Charger Total Energy</label>
+		<description>Cumulative energy consumed by the charger (register 32001).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-charging-power">
+		<item-type>Number:Power</item-type>
+		<label>Charging Power</label>
+		<description>Current charging power (register 32003). Positive while charging.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-rated-power" advanced="true">
+		<item-type>Number:Power</item-type>
+		<label>Charger Rated Power</label>
+		<description>Rated power of the charger (register 32005).</description>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-rated-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Charger Rated Current</label>
+		<description>Rated current of the charger (register 32007).</description>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-rated-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Charger Rated Voltage</label>
+		<description>Rated voltage of the charger (register 32009).</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-evac-input-breaker-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Charger Input Breaker Rating</label>
+		<description>Rated current of the charger's own input breaker (register 32010). This is a property of the
+			charger, not
+			the household main fuse or the DLM limit.</description>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="sigenergy-ems-mode">
+		<item-type>String</item-type>
+		<label>EMS Work Mode</label>
+		<description>Current EMS work mode (register 30003). Unknown values are shown as "Unknown (n)".</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Mode</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="MAX_SELF_CONSUMPTION">Max self consumption</option>
+				<option value="AI_MODE">AI mode</option>
+				<option value="TOU">Time of use</option>
+				<option value="FULL_FEED_IN_TO_GRID">Full feed-in to grid</option>
+				<option value="REMOTE_EMS">Remote EMS mode</option>
+				<option value="CUSTOM">Custom</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-on-off-grid-status">
+		<item-type>String</item-type>
+		<label>On/Off-Grid Status</label>
+		<description>Whether the plant is operating on-grid or off-grid (register 30009). Unknown values are shown as
+			"Unknown
+			(n)".</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Mode</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="ON_GRID">On grid</option>
+				<option value="OFF_GRID_AUTO">Off grid (auto)</option>
+				<option value="OFF_GRID_MANUAL">Off grid (manual)</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-plant-running-state">
+		<item-type>String</item-type>
+		<label>Plant Running State</label>
+		<description>Operating state of the plant (register 30051). Unknown values are shown as "Unknown (n)".</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="STANDBY">Standby</option>
+				<option value="RUNNING">Running</option>
+				<option value="FAULT">Fault</option>
+				<option value="SHUTDOWN">Shutdown</option>
+				<option value="ENVIRONMENTAL_ABNORMALITY">Environmental abnormality</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-last-update">
+		<item-type>DateTime</item-type>
+		<label>Last Successful Update</label>
+		<description>Timestamp of the last fully decoded fast poll. Not updated on failed reads.</description>
+		<tags>
+			<tag>Status</tag>
+			<tag>Timestamp</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-plant-power">
+		<item-type>Number:Power</item-type>
+		<label>Plant Active Power</label>
+		<description>Total active power of the plant (register 30031).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-pv-power">
+		<item-type>Number:Power</item-type>
+		<label>PV Power</label>
+		<description>Current photovoltaic generation power (register 30035).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-load-power">
+		<item-type>Number:Power</item-type>
+		<label>Load Power</label>
+		<description>Total load power (register 30284, protocol V2.8+). On older firmware without this register the value
+			is
+			derived as PV power + grid power - battery power.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-general-load-power" advanced="true">
+		<item-type>Number:Power</item-type>
+		<label>General Load Power</label>
+		<description>General load power (register 30282, protocol V2.8+). Stays undefined on older firmware.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-grid-sensor-status">
+		<item-type>String</item-type>
+		<label>Grid Sensor Status</label>
+		<description>Whether the Sigenergy grid power sensor is communicating (register 30004). Unknown values are shown
+			as
+			"Unknown (n)".</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="NOT_CONNECTED">Not connected</option>
+				<option value="CONNECTED">Connected</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-grid-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid Power</label>
+		<description>Power exchanged with the grid (register 30005): positive is import, negative is export.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-grid-phase-a-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid Phase A Power</label>
+		<description>Grid sensor phase A active power (register 30052): positive is import, negative is export.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-grid-phase-b-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid Phase B Power</label>
+		<description>Grid sensor phase B active power (register 30054): positive is import, negative is export.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-grid-phase-c-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid Phase C Power</label>
+		<description>Grid sensor phase C active power (register 30056): positive is import, negative is export.</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-battery-soc">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Level (SOC)</label>
+		<description>Aggregate state of charge of the energy storage system (register 30014).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-battery-power">
+		<item-type>Number:Power</item-type>
+		<label>Battery Power</label>
+		<description>Battery power (register 30037): positive is charging, negative is discharging.</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-battery-soh">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Health (SOH)</label>
+		<description>Capacity-weighted average state of health of the ESS devices (register 30087).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-charge-cutoff-soc" advanced="true">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Charge Cut-Off SOC</label>
+		<description>Configured SOC at which charging stops (register 30085). Monitoring only.</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-discharge-cutoff-soc">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Discharge Cut-Off SOC</label>
+		<description>Configured SOC at which discharging stops (register 30086). Monitoring only.</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-cell-temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Battery Cell Temperature</label>
+		<description>Average ESS cell temperature (register 30286, protocol V2.8+).</description>
+		<category>Temperature</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Temperature</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-rated-capacity" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>Rated Energy Capacity</label>
+		<description>Rated energy capacity of the ESS (register 30083).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-available-charge-capacity" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>Available Charging Capacity</label>
+		<description>Maximum energy that can currently be charged into the ESS (register 30064).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-available-discharge-capacity" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>Available Discharging Capacity</label>
+		<description>Maximum energy that can currently be discharged from the ESS (register 30066).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-pv-generation-today">
+		<item-type>Number:Energy</item-type>
+		<label>PV Generation Today</label>
+		<description>Photovoltaic generation today (register 30272).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-pv-generation-yesterday" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>PV Generation Yesterday</label>
+		<description>Photovoltaic generation of the previous day (register 30274).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-load-consumption-today">
+		<item-type>Number:Energy</item-type>
+		<label>Load Consumption Today</label>
+		<description>Total load consumption today (register 30092).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-pv-generation">
+		<item-type>Number:Energy</item-type>
+		<label>Total PV Generation</label>
+		<description>Cumulative photovoltaic generation (register 30088).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-load-consumption">
+		<item-type>Number:Energy</item-type>
+		<label>Total Load Consumption</label>
+		<description>Cumulative load consumption (register 30094).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-battery-charged-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Total Battery Charged Energy</label>
+		<description>Cumulative energy charged into the ESS (register 30200).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-battery-discharged-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Total Battery Discharged Energy</label>
+		<description>Cumulative energy discharged from the ESS (register 30204).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-imported-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Total Imported Energy</label>
+		<description>Cumulative energy imported from the grid (register 30216).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-total-exported-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Total Exported Energy</label>
+		<description>Cumulative energy exported to the grid (register 30220).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+</thing:thing-descriptions>

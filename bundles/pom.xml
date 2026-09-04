@@ -278,6 +278,7 @@
     <module>org.openhab.binding.modbus.e3dc</module>
     <module>org.openhab.binding.modbus.kermi</module>
     <module>org.openhab.binding.modbus.sbc</module>
+    <module>org.openhab.binding.modbus.sigenergy</module>
     <module>org.openhab.binding.modbus.studer</module>
     <module>org.openhab.binding.modbus.sungrow</module>
     <module>org.openhab.binding.modbus.sunspec</module>
