@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:sigenergy:plant">
+		<parameter name="pollInterval" type="integer" required="true" min="1000" unit="ms">
+			<label>Poll Interval</label>
+			<description>Time between polling the data in ms. Sigenergy devices support a minimum interval of 1000 ms.</description>
+			<default>5000</default>
+		</parameter>
+		<parameter name="maxTries" type="integer" min="1">
+			<label>Maximum Tries When Reading</label>
+			<default>3</default>
+			<description>Specifies how many times the binding should retry reading data if a read attempt fails. Set to `1` to
+				disable retries and use a single attempt.</description>
+		</parameter>
+	</config-description>
+
+	<config-description uri="thing-type:sigenergy:evac">
+		<parameter name="unitId" type="integer" required="true" min="1" max="246">
+			<label>Charger Unit ID</label>
+			<description>The charger's own Modbus unit ID (1-246), as configured in the mySigen app. Distinct from the
+				plant unit
+				ID 247 on the bridge.</description>
+		</parameter>
+		<parameter name="pollInterval" type="integer" required="true" min="1000" unit="ms">
+			<label>Poll Interval</label>
+			<description>Time between polling the data in ms. Sigenergy devices support a minimum interval of 1000 ms.</description>
+			<default>5000</default>
+		</parameter>
+		<parameter name="maxTries" type="integer" min="1">
+			<label>Maximum Tries When Reading</label>
+			<default>3</default>
+			<description>Specifies how many times the binding should retry reading data if a read attempt fails. Set to `1` to
+				disable retries and use a single attempt.</description>
+		</parameter>
+	</config-description>
+
+</config-description:config-descriptions>
