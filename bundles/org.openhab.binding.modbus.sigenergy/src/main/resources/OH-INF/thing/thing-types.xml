@@ -41,6 +41,114 @@
 		<config-description-ref uri="thing-type:sigenergy:evac"/>
 	</thing-type>
 
+	<thing-type id="sigenergy-inverter">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="serial"/>
+			<bridge-type-ref id="tcp"/>
+		</supported-bridge-type-refs>
+
+		<label>Sigenergy Hybrid Inverter</label>
+		<description>Read-only monitoring of a Sigenergy hybrid inverter, including per-string PV data. Uses the
+			inverter's own
+			Modbus unit ID (1-246, configured in mySigen).</description>
+		<category>Inverter</category>
+		<channel-groups>
+			<channel-group id="status" typeId="sigenergy-inv-status"/>
+			<channel-group id="power" typeId="sigenergy-inv-power"/>
+			<channel-group id="strings" typeId="sigenergy-inv-strings"/>
+			<channel-group id="phases" typeId="sigenergy-inv-phases"/>
+			<channel-group id="battery" typeId="sigenergy-inv-battery"/>
+			<channel-group id="energy" typeId="sigenergy-inv-energy"/>
+		</channel-groups>
+		<config-description-ref uri="thing-type:sigenergy:inverter"/>
+	</thing-type>
+
+	<channel-group-type id="sigenergy-inv-status">
+		<label>Status</label>
+		<channels>
+			<channel id="running-state" typeId="sigenergy-inv-running-state"/>
+			<channel id="alarm-active" typeId="sigenergy-inv-alarm-active"/>
+			<channel id="alarm-mask-1" typeId="sigenergy-inv-alarm-mask-1"/>
+			<channel id="alarm-mask-2" typeId="sigenergy-inv-alarm-mask-2"/>
+			<channel id="alarm-mask-3" typeId="sigenergy-inv-alarm-mask-3"/>
+			<channel id="alarm-mask-4" typeId="sigenergy-inv-alarm-mask-4"/>
+			<channel id="alarm-mask-5" typeId="sigenergy-inv-alarm-mask-5"/>
+			<channel id="last-successful-update" typeId="sigenergy-last-update"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-inv-power">
+		<label>Power</label>
+		<channels>
+			<channel id="active-power" typeId="sigenergy-inv-active-power"/>
+			<channel id="pv-power" typeId="sigenergy-inv-pv-power"/>
+			<channel id="grid-frequency" typeId="sigenergy-inv-grid-frequency"/>
+			<channel id="internal-temperature" typeId="sigenergy-inv-internal-temperature"/>
+			<channel id="power-factor" typeId="sigenergy-inv-power-factor"/>
+			<channel id="rated-active-power" typeId="sigenergy-inv-rated-active-power"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-inv-strings">
+		<label>PV Strings</label>
+		<category>SolarPlant</category>
+		<channels>
+			<channel id="string-count" typeId="sigenergy-inv-string-count"/>
+			<channel id="mppt-count" typeId="sigenergy-inv-mppt-count"/>
+			<channel id="pv1-voltage" typeId="sigenergy-inv-pv1-voltage"/>
+			<channel id="pv1-current" typeId="sigenergy-inv-pv1-current"/>
+			<channel id="pv1-power" typeId="sigenergy-inv-pv1-power"/>
+			<channel id="pv2-voltage" typeId="sigenergy-inv-pv2-voltage"/>
+			<channel id="pv2-current" typeId="sigenergy-inv-pv2-current"/>
+			<channel id="pv2-power" typeId="sigenergy-inv-pv2-power"/>
+			<channel id="pv3-voltage" typeId="sigenergy-inv-pv3-voltage"/>
+			<channel id="pv3-current" typeId="sigenergy-inv-pv3-current"/>
+			<channel id="pv3-power" typeId="sigenergy-inv-pv3-power"/>
+			<channel id="pv4-voltage" typeId="sigenergy-inv-pv4-voltage"/>
+			<channel id="pv4-current" typeId="sigenergy-inv-pv4-current"/>
+			<channel id="pv4-power" typeId="sigenergy-inv-pv4-power"/>
+			<channel id="insulation-resistance" typeId="sigenergy-inv-insulation-resistance"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-inv-phases">
+		<label>Phases</label>
+		<channels>
+			<channel id="phase-a-voltage" typeId="sigenergy-inv-phase-a-voltage"/>
+			<channel id="phase-b-voltage" typeId="sigenergy-inv-phase-b-voltage"/>
+			<channel id="phase-c-voltage" typeId="sigenergy-inv-phase-c-voltage"/>
+			<channel id="phase-a-current" typeId="sigenergy-inv-phase-a-current"/>
+			<channel id="phase-b-current" typeId="sigenergy-inv-phase-b-current"/>
+			<channel id="phase-c-current" typeId="sigenergy-inv-phase-c-current"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-inv-battery">
+		<label>Battery</label>
+		<category>Battery</category>
+		<channels>
+			<channel id="ess-power" typeId="sigenergy-inv-ess-power"/>
+			<channel id="ess-soc" typeId="sigenergy-inv-ess-soc"/>
+			<channel id="ess-soh" typeId="sigenergy-inv-ess-soh"/>
+			<channel id="cell-temperature" typeId="sigenergy-inv-cell-temperature"/>
+			<channel id="cell-voltage" typeId="sigenergy-inv-cell-voltage"/>
+			<channel id="available-charge-energy" typeId="sigenergy-inv-available-charge-energy"/>
+			<channel id="available-discharge-energy" typeId="sigenergy-inv-available-discharge-energy"/>
+			<channel id="ess-rated-capacity" typeId="sigenergy-inv-ess-rated-capacity"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="sigenergy-inv-energy">
+		<label>Energy</label>
+		<category>Energy</category>
+		<channels>
+			<channel id="daily-charge-energy" typeId="sigenergy-inv-daily-charge-energy"/>
+			<channel id="accumulated-charge-energy" typeId="sigenergy-inv-accumulated-charge-energy"/>
+			<channel id="daily-discharge-energy" typeId="sigenergy-inv-daily-discharge-energy"/>
+			<channel id="accumulated-discharge-energy" typeId="sigenergy-inv-accumulated-discharge-energy"/>
+		</channels>
+	</channel-group-type>
+
 	<channel-group-type id="sigenergy-evac-status">
 		<label>Status</label>
 		<channels>
@@ -83,6 +191,15 @@
 			<channel id="pv-power" typeId="sigenergy-pv-power"/>
 			<channel id="load-power" typeId="sigenergy-load-power"/>
 			<channel id="general-load-power" typeId="sigenergy-general-load-power"/>
+			<channel id="alarm-active" typeId="sigenergy-alarm-active"/>
+			<channel id="alarm-summary" typeId="sigenergy-alarm-summary"/>
+			<channel id="alarm-mask-1" typeId="sigenergy-alarm-mask-1"/>
+			<channel id="alarm-mask-2" typeId="sigenergy-alarm-mask-2"/>
+			<channel id="alarm-mask-3" typeId="sigenergy-alarm-mask-3"/>
+			<channel id="alarm-mask-4" typeId="sigenergy-alarm-mask-4"/>
+			<channel id="alarm-mask-5" typeId="sigenergy-alarm-mask-5"/>
+			<channel id="alarm-mask-6" typeId="sigenergy-alarm-mask-6"/>
+			<channel id="alarm-mask-7" typeId="sigenergy-alarm-mask-7"/>
 			<channel id="last-successful-update" typeId="sigenergy-last-update"/>
 		</channels>
 	</channel-group-type>
@@ -130,6 +247,454 @@
 		</channels>
 	</channel-group-type>
 
+	<channel-type id="sigenergy-inv-running-state">
+		<item-type>String</item-type>
+		<label>Inverter Running State</label>
+		<description>Operating state of the inverter (register 30578, Appendix 1). Unknown values are shown as "Unknown (n)".</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true">
+			<options>
+				<option value="STANDBY">Standby</option>
+				<option value="RUNNING">Running</option>
+				<option value="FAULT">Fault</option>
+				<option value="SHUTDOWN">Shutdown</option>
+				<option value="ENVIRONMENTAL_ABNORMALITY">Environmental abnormality</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-active">
+		<item-type>Switch</item-type>
+		<label>Inverter Alarm Active</label>
+		<description>ON if any bit in alarm registers 30605-30609 is set.</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-mask-1" advanced="true">
+		<item-type>Number</item-type>
+		<label>Inverter Alarm Mask 1</label>
+		<description>Raw alarm bit mask, register 30605.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-mask-2" advanced="true">
+		<item-type>Number</item-type>
+		<label>Inverter Alarm Mask 2</label>
+		<description>Raw alarm bit mask, register 30606.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-mask-3" advanced="true">
+		<item-type>Number</item-type>
+		<label>Inverter Alarm Mask 3</label>
+		<description>Raw alarm bit mask, register 30607.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-mask-4" advanced="true">
+		<item-type>Number</item-type>
+		<label>Inverter Alarm Mask 4</label>
+		<description>Raw alarm bit mask, register 30608.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-alarm-mask-5" advanced="true">
+		<item-type>Number</item-type>
+		<label>Inverter Alarm Mask 5</label>
+		<description>Raw alarm bit mask, register 30609.</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-active-power">
+		<item-type>Number:Power</item-type>
+		<label>Inverter Active Power</label>
+		<description>AC active power of the inverter (register 30587).</description>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv-power">
+		<item-type>Number:Power</item-type>
+		<label>Inverter PV Power</label>
+		<description>Total DC PV power of the inverter (register 31035).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-grid-frequency" advanced="true">
+		<item-type>Number:Frequency</item-type>
+		<label>Grid Frequency</label>
+		<description>Measured grid frequency (register 31002).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Frequency</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-internal-temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Inverter Temperature</label>
+		<description>PCS internal temperature (register 31003).</description>
+		<category>Temperature</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Temperature</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-power-factor" advanced="true">
+		<item-type>Number</item-type>
+		<label>Power Factor</label>
+		<description>Power factor (register 31023).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-rated-active-power" advanced="true">
+		<item-type>Number:Power</item-type>
+		<label>Rated Active Power</label>
+		<description>Rated active power of the inverter (register 30540).</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-string-count" advanced="true">
+		<item-type>Number</item-type>
+		<label>PV String Count</label>
+		<description>Number of connected PV strings (register 31025).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-mppt-count" advanced="true">
+		<item-type>Number</item-type>
+		<label>MPPT Count</label>
+		<description>Number of MPPTs (register 31026).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv1-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>String 1 Voltage</label>
+		<description>PV string 1 voltage (register 31027).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv1-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>String 1 Current</label>
+		<description>PV string 1 current (register 31028).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv1-power">
+		<item-type>Number:Power</item-type>
+		<label>String 1 Power</label>
+		<description>PV string 1 power, derived as string voltage times string current.</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv2-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>String 2 Voltage</label>
+		<description>PV string 2 voltage (register 31029).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv2-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>String 2 Current</label>
+		<description>PV string 2 current (register 31030).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv2-power">
+		<item-type>Number:Power</item-type>
+		<label>String 2 Power</label>
+		<description>PV string 2 power, derived as string voltage times string current.</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv3-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>String 3 Voltage</label>
+		<description>PV string 3 voltage (register 31031).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv3-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>String 3 Current</label>
+		<description>PV string 3 current (register 31032).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv3-power">
+		<item-type>Number:Power</item-type>
+		<label>String 3 Power</label>
+		<description>PV string 3 power, derived as string voltage times string current.</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv4-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>String 4 Voltage</label>
+		<description>PV string 4 voltage (register 31033).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv4-current" advanced="true">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>String 4 Current</label>
+		<description>PV string 4 current (register 31034).</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-pv4-power">
+		<item-type>Number:Power</item-type>
+		<label>String 4 Power</label>
+		<description>PV string 4 power, derived as string voltage times string current.</description>
+		<category>SolarPlant</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-insulation-resistance" advanced="true">
+		<item-type>Number</item-type>
+		<label>Insulation Resistance</label>
+		<description>PV insulation resistance in megaohm (register 31037).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-a-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Phase A Voltage</label>
+		<description>Inverter phase A voltage (register 31011).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-a-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Phase A Current</label>
+		<description>Inverter phase A current (register 31017).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-b-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Phase B Voltage</label>
+		<description>Inverter phase B voltage (register 31013).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-b-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Phase B Current</label>
+		<description>Inverter phase B current (register 31019).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-c-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Phase C Voltage</label>
+		<description>Inverter phase C voltage (register 31015).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-phase-c-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Phase C Current</label>
+		<description>Inverter phase C current (register 31021).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Current</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-ess-power">
+		<item-type>Number:Power</item-type>
+		<label>ESS Power</label>
+		<description>Battery power at this inverter (register 30599): positive is charging, negative is discharging.</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-ess-soc" advanced="true">
+		<item-type>Number:Dimensionless</item-type>
+		<label>ESS SOC</label>
+		<description>Battery state of charge at this inverter (register 30601).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-ess-soh" advanced="true">
+		<item-type>Number:Dimensionless</item-type>
+		<label>ESS SOH</label>
+		<description>Battery state of health at this inverter (register 30602).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.1f %%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-cell-temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Cell Temperature</label>
+		<description>Average battery cell temperature (register 30603).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Temperature</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-cell-voltage" advanced="true">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Cell Voltage</label>
+		<description>Average battery cell voltage (register 30604).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Voltage</tag>
+		</tags>
+		<state pattern="%.3f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-available-charge-energy" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>Available Charge Energy</label>
+		<description>Energy that can currently be charged into this inverter's battery (register 30595).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-available-discharge-energy" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>Available Discharge Energy</label>
+		<description>Energy that can currently be discharged from this inverter's battery (register 30597).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-ess-rated-capacity" advanced="true">
+		<item-type>Number:Energy</item-type>
+		<label>ESS Rated Capacity</label>
+		<description>Rated battery capacity at this inverter (register 30548).</description>
+		<category>Battery</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-daily-charge-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Daily Charge Energy</label>
+		<description>Battery energy charged today at this inverter (register 30566).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-accumulated-charge-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Accumulated Charge Energy</label>
+		<description>Cumulative battery charge energy (register 30568).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-daily-discharge-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Daily Discharge Energy</label>
+		<description>Battery energy discharged today at this inverter (register 30572).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-inv-accumulated-discharge-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Accumulated Discharge Energy</label>
+		<description>Cumulative battery discharge energy (register 30574).</description>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
 	<channel-type id="sigenergy-evac-system-state">
 		<item-type>String</item-type>
 		<label>Charger System State</label>
@@ -242,6 +807,67 @@
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
 
+	<channel-type id="sigenergy-alarm-active">
+		<item-type>Switch</item-type>
+		<label>Plant Alarm Active</label>
+		<description>ON if any documented merged-alarm bit of registers 30027-30030, 30072 or 30280-30281 is set.</description>
+		<tags>
+			<tag>Alarm</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-summary">
+		<item-type>String</item-type>
+		<label>Plant Alarm Summary</label>
+		<description>Active documented alarms as canonical identifiers (PCS/ESS/GATEWAY/DC_CHARGER/PLANT prefixed), or
+			NONE.</description>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-1" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 1</label>
+		<description>Raw merged alarm bit mask, register 30027, appendix 2 (PCS alarms).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-2" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 2</label>
+		<description>Raw merged alarm bit mask, register 30028, appendix 3 (PCS alarms).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-3" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 3</label>
+		<description>Raw merged alarm bit mask, register 30029, appendix 4 (ESS alarms).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-4" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 4</label>
+		<description>Raw merged alarm bit mask, register 30030, appendix 5 (gateway alarms).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-5" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 5</label>
+		<description>Raw merged alarm bit mask, register 30072, appendix 11 (DC charger alarms).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-6" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 6</label>
+		<description>Raw merged alarm bit mask, register 30280, appendix 12 (plant alarms, protocol V2.8+).</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="sigenergy-alarm-mask-7" advanced="true">
+		<item-type>Number</item-type>
+		<label>Merged Alarm Mask 7</label>
+		<description>Raw merged alarm bit mask, register 30281, appendix 13 (plant alarms, protocol V2.8+).</description>
+		<state readOnly="true"/>
+	</channel-type>
 	<channel-type id="sigenergy-ems-mode">
 		<item-type>String</item-type>
 		<label>EMS Work Mode</label>

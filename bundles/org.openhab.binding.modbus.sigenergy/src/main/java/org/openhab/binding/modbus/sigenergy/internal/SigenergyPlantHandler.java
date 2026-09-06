@@ -30,7 +30,9 @@ import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
 import org.openhab.core.io.transport.modbus.PollTask;
 import org.openhab.core.io.transport.modbus.exception.ModbusSlaveErrorResponseException;
 import org.openhab.core.library.types.DateTimeType;
+import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -83,13 +85,16 @@ public class SigenergyPlantHandler extends BaseModbusThingHandler {
     private static final List<SigenergyPlantRegisters> CORE_REGISTERS = List.of( //
             SigenergyPlantRegisters.EMS_MODE, SigenergyPlantRegisters.GRID_SENSOR_STATUS,
             SigenergyPlantRegisters.GRID_POWER, SigenergyPlantRegisters.ON_OFF_GRID_STATUS,
-            SigenergyPlantRegisters.BATTERY_SOC, SigenergyPlantRegisters.PLANT_POWER, SigenergyPlantRegisters.PV_POWER,
+            SigenergyPlantRegisters.BATTERY_SOC, SigenergyPlantRegisters.ALARM_MASK_1,
+            SigenergyPlantRegisters.ALARM_MASK_2, SigenergyPlantRegisters.ALARM_MASK_3,
+            SigenergyPlantRegisters.ALARM_MASK_4, SigenergyPlantRegisters.PLANT_POWER, SigenergyPlantRegisters.PV_POWER,
             SigenergyPlantRegisters.BATTERY_POWER, SigenergyPlantRegisters.PLANT_RUNNING_STATE,
             SigenergyPlantRegisters.GRID_PHASE_A_POWER, SigenergyPlantRegisters.GRID_PHASE_B_POWER,
             SigenergyPlantRegisters.GRID_PHASE_C_POWER, SigenergyPlantRegisters.AVAILABLE_CHARGE_CAPACITY,
-            SigenergyPlantRegisters.AVAILABLE_DISCHARGE_CAPACITY);
+            SigenergyPlantRegisters.AVAILABLE_DISCHARGE_CAPACITY, SigenergyPlantRegisters.ALARM_MASK_5);
 
     private static final List<SigenergyPlantRegisters> LOAD_REGISTERS = List.of( //
+            SigenergyPlantRegisters.ALARM_MASK_6, SigenergyPlantRegisters.ALARM_MASK_7,
             SigenergyPlantRegisters.GENERAL_LOAD_POWER, SigenergyPlantRegisters.TOTAL_LOAD_POWER,
             SigenergyPlantRegisters.CELL_TEMPERATURE);
 
@@ -114,6 +119,8 @@ public class SigenergyPlantHandler extends BaseModbusThingHandler {
     private @Nullable BigDecimal pvPowerWatts;
     private @Nullable BigDecimal gridPowerWatts;
     private @Nullable BigDecimal batteryPowerWatts;
+    // merged alarm masks 1-7; -1 = not read yet
+    private final int[] alarmMasks = { -1, -1, -1, -1, -1, -1, -1 };
 
     public SigenergyPlantHandler(Thing thing) {
         super(thing);
@@ -179,6 +186,7 @@ public class SigenergyPlantHandler extends BaseModbusThingHandler {
 
         updateStatus(ThingStatus.UNKNOWN);
         loadRegistersAvailable = false;
+        java.util.Arrays.fill(alarmMasks, -1);
         optionalPollTasks.clear();
 
         ReadBlock core = buildCoreBlock(getSlaveId(), config.maxTries);
@@ -234,6 +242,7 @@ public class SigenergyPlantHandler extends BaseModbusThingHandler {
             });
         }
         updateLoadPower();
+        updateAlarmChannels();
     }
 
     private void cachePowerValue(SigenergyPlantRegisters register, BigDecimal rawWatts) {
@@ -241,9 +250,33 @@ public class SigenergyPlantHandler extends BaseModbusThingHandler {
             case PV_POWER -> pvPowerWatts = rawWatts;
             case GRID_POWER -> gridPowerWatts = rawWatts;
             case BATTERY_POWER -> batteryPowerWatts = rawWatts;
+            case ALARM_MASK_1 -> alarmMasks[0] = rawWatts.intValue();
+            case ALARM_MASK_2 -> alarmMasks[1] = rawWatts.intValue();
+            case ALARM_MASK_3 -> alarmMasks[2] = rawWatts.intValue();
+            case ALARM_MASK_4 -> alarmMasks[3] = rawWatts.intValue();
+            case ALARM_MASK_5 -> alarmMasks[4] = rawWatts.intValue();
+            case ALARM_MASK_6 -> alarmMasks[5] = rawWatts.intValue();
+            case ALARM_MASK_7 -> alarmMasks[6] = rawWatts.intValue();
             default -> {
             }
         }
+    }
+
+    private void updateAlarmChannels() {
+        boolean anyRead = false;
+        for (int mask : alarmMasks) {
+            if (mask >= 0) {
+                anyRead = true;
+                break;
+            }
+        }
+        if (!anyRead) {
+            return;
+        }
+        updateState(new ChannelUID(thing.getUID(), ModbusSigenergyBindingConstants.GROUP_OVERVIEW, "alarm-active"),
+                OnOffType.from(SigenergyPlantAlarms.anyActive(alarmMasks)));
+        updateState(new ChannelUID(thing.getUID(), ModbusSigenergyBindingConstants.GROUP_OVERVIEW, "alarm-summary"),
+                new StringType(SigenergyPlantAlarms.summary(alarmMasks)));
     }
 
     private void updateLoadPower() {

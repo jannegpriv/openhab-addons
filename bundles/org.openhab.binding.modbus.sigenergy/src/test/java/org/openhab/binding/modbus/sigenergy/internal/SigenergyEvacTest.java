@@ -151,6 +151,8 @@ class SigenergyEvacTest {
     @Test
     public void testEmptyAndUndefinedAlarmBits() {
         assertEquals("NONE", SigenergyEvacAlarms.summary(0, 0, 0));
+        // 0xFFFF marks a mask as not applicable on this firmware
+        assertEquals("NONE", SigenergyEvacAlarms.summary(0xFFFF, 0, 0));
         assertFalse(SigenergyEvacAlarms.anyActive(0, 0, 0));
         // undefined bits never appear in the summary but are detectable for diagnostics
         assertEquals("NONE", SigenergyEvacAlarms.summary(1 << 15, 1 << 10, 1 << 9));

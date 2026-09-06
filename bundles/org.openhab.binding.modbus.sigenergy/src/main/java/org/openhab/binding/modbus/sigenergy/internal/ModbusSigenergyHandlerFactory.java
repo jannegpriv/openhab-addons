@@ -13,6 +13,7 @@
 package org.openhab.binding.modbus.sigenergy.internal;
 
 import static org.openhab.binding.modbus.sigenergy.internal.ModbusSigenergyBindingConstants.THING_TYPE_EVAC;
+import static org.openhab.binding.modbus.sigenergy.internal.ModbusSigenergyBindingConstants.THING_TYPE_INVERTER;
 import static org.openhab.binding.modbus.sigenergy.internal.ModbusSigenergyBindingConstants.THING_TYPE_PLANT;
 
 import java.util.Set;
@@ -36,7 +37,8 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.sigenergy", service = ThingHandlerFactory.class)
 public class ModbusSigenergyHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_PLANT, THING_TYPE_EVAC);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_PLANT, THING_TYPE_EVAC,
+            THING_TYPE_INVERTER);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -53,6 +55,10 @@ public class ModbusSigenergyHandlerFactory extends BaseThingHandlerFactory {
 
         if (THING_TYPE_EVAC.equals(thingTypeUID)) {
             return new SigenergyEvacHandler(thing);
+        }
+
+        if (THING_TYPE_INVERTER.equals(thingTypeUID)) {
+            return new SigenergyInverterHandler(thing);
         }
 
         return null;

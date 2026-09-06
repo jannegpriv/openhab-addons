@@ -60,6 +60,10 @@ public enum SigenergyPlantRegisters {
     PV_POWER(30035, INT32, wattFactory(), GROUP_OVERVIEW),
     // positive = charge, negative = discharge
     BATTERY_POWER(30037, INT32, wattFactory(), GROUP_BATTERY),
+    ALARM_MASK_1(30027, UINT16, DecimalType::new, GROUP_OVERVIEW),
+    ALARM_MASK_2(30028, UINT16, DecimalType::new, GROUP_OVERVIEW),
+    ALARM_MASK_3(30029, UINT16, DecimalType::new, GROUP_OVERVIEW),
+    ALARM_MASK_4(30030, UINT16, DecimalType::new, GROUP_OVERVIEW),
     PLANT_RUNNING_STATE(30051, UINT16, stringFactory(SigenergyEnumMappers::plantRunningState), GROUP_OVERVIEW),
     // per-phase grid power, same sign convention as GRID_POWER
     GRID_PHASE_A_POWER(30052, INT32, wattFactory(), GROUP_GRID),
@@ -67,6 +71,7 @@ public enum SigenergyPlantRegisters {
     GRID_PHASE_C_POWER(30056, INT32, wattFactory(), GROUP_GRID),
     AVAILABLE_CHARGE_CAPACITY(30064, UINT32, energyFactory(), GROUP_BATTERY),
     AVAILABLE_DISCHARGE_CAPACITY(30066, UINT32, energyFactory(), GROUP_BATTERY),
+    ALARM_MASK_5(30072, UINT16, DecimalType::new, GROUP_OVERVIEW),
 
     RATED_CAPACITY(30083, UINT32, energyFactory(), GROUP_BATTERY),
     CHARGE_CUTOFF_SOC(30085, UINT16, percentFactory(), GROUP_BATTERY),
@@ -85,6 +90,8 @@ public enum SigenergyPlantRegisters {
     PV_GENERATION_YESTERDAY(30274, UINT32, energyFactory(), GROUP_ENERGY),
 
     // registers below exist since protocol V2.8; polled separately so older firmware can fall back
+    ALARM_MASK_6(30280, UINT16, DecimalType::new, GROUP_OVERVIEW),
+    ALARM_MASK_7(30281, UINT16, DecimalType::new, GROUP_OVERVIEW),
     GENERAL_LOAD_POWER(30282, INT32, wattFactory(), GROUP_OVERVIEW),
     TOTAL_LOAD_POWER(30284, INT32, wattFactory(), GROUP_OVERVIEW, ModbusSigenergyBindingConstants.CHANNEL_LOAD_POWER),
     CELL_TEMPERATURE(30286, INT16, temperatureFactory(), GROUP_BATTERY);

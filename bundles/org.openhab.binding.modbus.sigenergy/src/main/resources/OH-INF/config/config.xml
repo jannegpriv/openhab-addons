@@ -18,6 +18,29 @@
 		</parameter>
 	</config-description>
 
+	<config-description uri="thing-type:sigenergy:inverter">
+		<parameter name="unitId" type="integer" required="true" min="1" max="246">
+			<label>Inverter Unit ID</label>
+			<description>The inverter's own Modbus unit ID (1-246), as configured in the mySigen app. Distinct from the
+				plant unit
+				ID 247 on the bridge.</description>
+			<default>1</default>
+		</parameter>
+		<parameter name="pollInterval" type="integer" required="true" min="1000" unit="ms">
+			<label>Poll Interval</label>
+			<description>Time between polling the data in ms. The default is slower than the plant poll to keep the shared
+				Modbus
+				endpoint within its request budget.</description>
+			<default>10000</default>
+		</parameter>
+		<parameter name="maxTries" type="integer" min="1">
+			<label>Maximum Tries When Reading</label>
+			<default>3</default>
+			<description>Specifies how many times the binding should retry reading data if a read attempt fails. Set to `1` to
+				disable retries and use a single attempt.</description>
+		</parameter>
+	</config-description>
+
 	<config-description uri="thing-type:sigenergy:evac">
 		<parameter name="unitId" type="integer" required="true" min="1" max="246">
 			<label>Charger Unit ID</label>

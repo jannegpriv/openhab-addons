@@ -50,6 +50,10 @@ public final class SigenergyEvacAlarms {
         int[] values = { mask1, mask2, mask3 };
         List<String> active = new ArrayList<>();
         for (int m = 0; m < MASKS.length; m++) {
+            if (values[m] == 0xFFFF) {
+                // all bits set marks the mask as not applicable on this firmware
+                continue;
+            }
             for (int bit = 0; bit < MASKS[m].length; bit++) {
                 if ((values[m] & (1 << bit)) != 0) {
                     active.add(MASKS[m][bit]);

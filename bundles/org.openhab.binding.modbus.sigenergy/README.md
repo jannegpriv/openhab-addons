@@ -14,10 +14,11 @@ It cannot change any setting of the installation, and the Sigen AI / EMS logic o
 
 This bundle adds the following thing type to the Modbus binding:
 
-| Thing Type      | Description                                                                       |
-| --------------- | --------------------------------------------------------------------------------- |
-| sigenergy-plant | Plant-level values of a Sigenergy system (read-only, unit ID 247)                 |
-| sigenergy-evac  | Read-only monitoring of a Sigen EVAC charger (own unit ID 1-246, set in mySigen)  |
+| Thing Type         | Description                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| sigenergy-plant    | Plant-level values of a Sigenergy system (read-only, unit ID 247)                           |
+| sigenergy-inverter | Hybrid inverter details incl. per-string PV data (own unit ID, usually 1)                   |
+| sigenergy-evac     | Read-only monitoring of a Sigen EVAC charger (own unit ID 1-246, set in mySigen)            |
 
 The things must be created as children of a generic Modbus `tcp` (or `serial`) bridge.
 No generic poller or data things are needed; the things poll and decode all channels by themselves.
@@ -40,8 +41,8 @@ The binding issues a small number of consolidated FC04 reads, staggered so that 
 
 | Block | Registers      | Interval        | Content                                            |
 | ----- | -------------- | --------------- | -------------------------------------------------- |
-| Core  | 30003, len 65  | pollInterval    | running data, powers, phases, SOC, capacities      |
-| Load  | 30282, len 5   | pollInterval    | load powers + cell temperature (protocol V2.8+)    |
+| Core  | 30003, len 70  | pollInterval    | running data, powers, phases, SOC, capacities, alarm masks 1-5 |
+| Load  | 30280, len 7   | pollInterval    | alarm masks 6-7, load powers + cell temperature (protocol V2.8+) |
 | Slow 1 | 30083, len 15 | 60 s            | battery limits, SOH, PV/load counters              |
 | Slow 2 | 30200, len 24 | 60 s            | battery/grid cumulative energy counters            |
 | Slow 3 | 30272, len 4  | 60 s            | daily PV generation                                |
@@ -53,6 +54,22 @@ The `overview#last-successful-update` channel is refreshed only after a fully de
 The EVAC thing issues exactly one additional FC04 read per poll (start 32000, length 15) with its own poll offset, staggered relative to the plant's poll slots.
 For a hard guarantee that no two requests to the shared endpoint are initiated less than 1000 ms apart regardless of unit ID, set `timeBetweenTransactionsMillis=1000` on the generic TCP bridge — the Modbus transport serializes and spaces all transactions per endpoint.
 An EVAC failure never affects the plant thing; the EVAC thing recovers automatically on the next successful read and its `status#last-successful-update` channel only advances on complete successful polls.
+
+## Inverter Channels
+
+The `sigenergy-inverter` thing (table 5-3 registers, unit ID usually 1, default poll 10 s) identifies
+itself on startup (model, serial number and firmware become thing properties) and provides groups
+`status`, `power`, `strings`, `phases`, `battery` and `energy`:
+
+- `status`: running state (Appendix 1 states), aggregate `alarm-active` switch, raw alarm masks 30605-30609 (advanced), last-successful-update
+- `power`: AC active power (30587), DC PV power (31035), grid frequency, internal temperature, power factor, rated power
+- `strings`: per-string voltage/current for PV1-PV4 (31027-31034) plus **derived per-string power** (voltage × current, computed by the binding), string/MPPT counts, insulation resistance
+- `phases`: per-phase voltage and current of the inverter (31011-31022)
+- `battery`: ESS power/SOC/SOH, cell temperature and voltage, available charge/discharge energy, rated capacity
+- `energy`: daily and accumulated (U64) battery charge/discharge energy counters
+
+Blocks that a firmware revision rejects are disabled individually. Strings beyond the reported
+string count read as 0.
 
 ## EVAC Channels
 
@@ -115,6 +132,11 @@ Channels are grouped into `overview`, `grid`, `battery` and `energy`.
 | energy   | total-imported-energy          | Number:Energy        | 30216    | Cumulative energy imported from the grid (U64 counter)                                    |
 | energy   | total-exported-energy          | Number:Energy        | 30220    | Cumulative energy exported to the grid (U64 counter)                                      |
 
+The plant's merged alarm registers (30027-30030, 30072, 30280-30281; appendices 2-5, 11-13) are decoded into an
+`overview#alarm-active` switch and an `overview#alarm-summary` channel with source-prefixed canonical identifiers
+(e.g. `ESS_THERMAL_RUNAWAY`, `PLANT_METER_COMMUNICATION_ABNORMAL`), or `NONE`; the raw masks are available as
+advanced channels. Undocumented bits never enter the summary.
+
 Enum channels publish stable canonical tokens (e.g. `MAX_SELF_CONSUMPTION`) with English and Swedish display labels via state options; unknown values are preserved and shown as `Unknown (n)`.
 Power values are published in watt; use a state pattern such as `%.1f kW` on the item to display kilowatt.
 Energy values are published in kWh; the cumulative counters are suitable for persistence-based daily-delta calculations (import/export/battery per day).
@@ -130,6 +152,7 @@ On older firmware the device rejects that request; the binding then stops pollin
 ```java
 Bridge modbus:tcp:sigenstor [ host="192.168.1.236", port=502, id=247, enableDiscovery=false, rtuEncoded=false, timeBetweenTransactionsMillis=1000 ] {
     Thing sigenergy-plant plant "SigenStor Plant" [ pollInterval=5000, maxTries=3 ]
+    Thing sigenergy-inverter inverter "Hybrid Inverter" [ unitId=1, pollInterval=10000, maxTries=3 ]
     Thing sigenergy-evac evac "EV Charger" [ unitId=2, pollInterval=5000, maxTries=3 ]
 }
 ```
