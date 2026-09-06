@@ -56,10 +56,10 @@ class SigenergyPlantHandlerTest {
 
     private static final int SLAVE_ID = 247;
 
-    /** Builds a 65-register core block array with the given values at the right offsets. */
+    /** Builds a 70-register core block array with the given values at the right offsets. */
     private static ModbusRegisterArray coreArray(int ems, int gridSensor, int gridHi, int gridLo, int onOff, int soc,
             int plantHi, int plantLo, int pvHi, int pvLo, int battHi, int battLo, int running) {
-        int[] words = new int[65];
+        int[] words = new int[70];
         words[0] = ems;
         words[1] = gridSensor;
         words[2] = gridHi;
@@ -96,18 +96,18 @@ class SigenergyPlantHandlerTest {
 
     @Test
     public void testPollBlockLayout() {
-        // core: 30003..30067, sent as PDU address 30003 (not 30002)
+        // core: 30003..30072, sent as PDU address 30003 (not 30002)
         SigenergyPlantHandler.ReadBlock core = SigenergyPlantHandler.buildCoreBlock(SLAVE_ID, 3);
         assertEquals(30003, core.blueprint.getReference());
-        assertEquals(65, core.blueprint.getDataLength());
+        assertEquals(70, core.blueprint.getDataLength());
 
         // SOC sits at offset 11, i.e. the request starts exactly at 30014 - 11 = 30003
         assertEquals(11, SigenergyPlantRegisters.BATTERY_SOC.getAddress() - core.startAddress);
 
-        // optional fast block: 30282..30286 (V2.8+)
+        // optional fast block: 30280..30286 (V2.8+), incl. plant alarm masks 6-7
         SigenergyPlantHandler.ReadBlock load = SigenergyPlantHandler.buildLoadBlock(SLAVE_ID, 3);
-        assertEquals(30282, load.blueprint.getReference());
-        assertEquals(5, load.blueprint.getDataLength());
+        assertEquals(30280, load.blueprint.getReference());
+        assertEquals(7, load.blueprint.getDataLength());
 
         // slow blocks: 30083 len 15 (U64 at 30094 ends at 30097), 30200 len 24, 30272 len 4
         List<SigenergyPlantHandler.ReadBlock> slow = SigenergyPlantHandler.buildSlowBlocks(SLAVE_ID, 3);
@@ -193,7 +193,7 @@ class SigenergyPlantHandlerTest {
 
         // optional block success must NOT touch the last-update channel
         setup.handler.handleOptionalReadResult(load,
-                new AsyncModbusReadResult(load.blueprint, new ModbusRegisterArray(0, 100, 0, 200, 285)));
+                new AsyncModbusReadResult(load.blueprint, new ModbusRegisterArray(0, 0, 0, 100, 0, 200, 285)));
         verify(setup.callback, never()).stateUpdated(eq(lastUpdate), any());
 
         // optional block failure must not either
@@ -241,7 +241,7 @@ class SigenergyPlantHandlerTest {
 
         // general load 3100 W (30282), total load 3200 W (30284), cell temp 28.5 °C (30286)
         setup.handler.handleOptionalReadResult(load,
-                new AsyncModbusReadResult(load.blueprint, new ModbusRegisterArray(0, 3100, 0, 3200, 285)));
+                new AsyncModbusReadResult(load.blueprint, new ModbusRegisterArray(0, 0, 0, 3100, 0, 3200, 285)));
         verify(setup.callback).stateUpdated(eq(loadUid), eq(new QuantityType<>("3200 W")));
         verify(setup.callback).stateUpdated(eq(setup.channel("overview", "general-load-power")),
                 eq(new QuantityType<>("3100 W")));

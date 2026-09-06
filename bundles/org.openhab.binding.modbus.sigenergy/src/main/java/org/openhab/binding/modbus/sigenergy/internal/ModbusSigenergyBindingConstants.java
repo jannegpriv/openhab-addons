@@ -32,6 +32,12 @@ public class ModbusSigenergyBindingConstants {
             "sigenergy-plant");
 
     /**
+     * ThingType-ID for the hybrid inverter.
+     */
+    public static final ThingTypeUID THING_TYPE_INVERTER = new ThingTypeUID(ModbusBindingConstants.BINDING_ID,
+            "sigenergy-inverter");
+
+    /**
      * ThingType-ID for the Sigen EVAC (AC charger).
      */
     public static final ThingTypeUID THING_TYPE_EVAC = new ThingTypeUID(ModbusBindingConstants.BINDING_ID,
