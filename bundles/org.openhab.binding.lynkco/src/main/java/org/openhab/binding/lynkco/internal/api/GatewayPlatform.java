@@ -539,13 +539,15 @@ public class GatewayPlatform implements VehiclePlatform {
      * Compute the path used for signing: relative to a known signature base URL when applicable
      * (e.g. {@code /vehicle/{vin}/vehicle_data}), otherwise the full URL path.
      */
-    private String signaturePath(String url) {
+    static String signaturePath(String url) {
+        String rawPath = URI.create(url).getRawPath();
         for (String base : SIGNATURE_BASES) {
             if (url.startsWith(base)) {
-                return "/" + url.substring(base.length()).replaceFirst("^/+", "");
+                String basePath = URI.create(base).getRawPath();
+                return "/" + rawPath.substring(basePath.length()).replaceFirst("^/+", "");
             }
         }
-        return URI.create(url).getRawPath();
+        return rawPath;
     }
 
     /**
