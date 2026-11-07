@@ -35,6 +35,11 @@ public class GatewayPlatformTest {
     }
 
     @Test
+    public void climateStartOmitsOptionalLegacyLevelParameter() {
+        assertEquals("auto_conditioning_start?temp=22", GatewayPlatform.climateStartCommand(22));
+    }
+
+    @Test
     public void signaturePathExcludesClimateQueryParameters() {
         String url = GATEWAY_COMMAND_BASE + "/vehicle/" + VIN + "/command/auto_conditioning_start?temp=22&level=2";
 

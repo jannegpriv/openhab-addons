@@ -313,9 +313,13 @@ public class GatewayPlatform implements VehiclePlatform {
     @Override
     public void startClimate(String vin, int targetTempCelsius, int climateLevel, int durationInMinutes)
             throws LynkcoApiException {
-        // Gateway auto_conditioning_start uses query params: temp (target °C, 16-28) and optional level.
-        // The gateway has no duration parameter.
-        postCommand(vin, "auto_conditioning_start?temp=" + targetTempCelsius + "&level=" + climateLevel, null);
+        postCommand(vin, climateStartCommand(targetTempCelsius), null);
+    }
+
+    static String climateStartCommand(int targetTempCelsius) {
+        // The current official gateway client sends temp for all supported models and omits the
+        // optional legacy level parameter. Query params are excluded from the v2 signature path.
+        return "auto_conditioning_start?temp=" + targetTempCelsius;
     }
 
     @Override
