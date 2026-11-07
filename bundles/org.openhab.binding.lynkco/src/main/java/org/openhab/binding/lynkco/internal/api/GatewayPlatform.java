@@ -455,7 +455,8 @@ public class GatewayPlatform implements VehiclePlatform {
             Request request = signedRequest(HttpMethod.POST, url, body);
             ContentResponse response = request.send();
             if (response.getStatus() == 200) {
-                logger.debug("Successfully sent gateway command {}", command);
+                logger.debug("Successfully sent gateway command {}, response: {}", command,
+                        response.getContentAsString());
             } else {
                 logger.debug("Gateway command {} failed, HTTP status: {}, response: {}", command, response.getStatus(),
                         response.getContentAsString());

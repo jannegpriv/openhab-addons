@@ -29,6 +29,12 @@ public class GatewayPlatformTest {
     private static final String VIN = "TESTVIN";
 
     @Test
+    public void gatewayHeadersMatchCurrentOfficialAppProfile() {
+        assertEquals("2.67.0", GATEWAY_APP_VERSION);
+        assertEquals("8455", GATEWAY_APP_BUILD_NUMBER);
+    }
+
+    @Test
     public void signaturePathExcludesClimateQueryParameters() {
         String url = GATEWAY_COMMAND_BASE + "/vehicle/" + VIN + "/command/auto_conditioning_start?temp=22&level=2";
 

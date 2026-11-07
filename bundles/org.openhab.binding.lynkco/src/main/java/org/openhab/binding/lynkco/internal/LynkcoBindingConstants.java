@@ -41,8 +41,8 @@ public class LynkcoBindingConstants {
     // App identification headers sent to the gateway (mirrors the official Android app)
     public static final String GATEWAY_USER_AGENT = "Android";
     public static final String GATEWAY_APP_NAME = "Lynk&Co";
-    public static final String GATEWAY_APP_VERSION = "2.55.0";
-    public static final String GATEWAY_APP_BUILD_NUMBER = "8284";
+    public static final String GATEWAY_APP_VERSION = "2.67.0";
+    public static final String GATEWAY_APP_BUILD_NUMBER = "8455";
     public static final String GATEWAY_DEVICE_OS_VERSION = "14";
     public static final String GATEWAY_DEVICE_MODEL = "Pixel 8";
     public static final String GATEWAY_DEVICE_LANGUAGE = "en";
